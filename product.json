@@ -1,46 +1,56 @@
 {
-	"nameShort": "Iskra",
-	"nameLong": "Искра IDE",
-	"voidVersion": "1.0.0",
-	"voidRelease": "0001",
-	"applicationName": "iskra",
-	"dataFolderName": ".iskra-ide",
-	"win32MutexName": "iskraide",
-	"licenseName": "MIT",
-	"licenseUrl": "https://github.com/voideditor/void/blob/main/LICENSE.txt",
-	"serverLicenseUrl": "https://github.com/voideditor/void/blob/main/LICENSE.txt",
-	"serverGreeting": [],
-	"serverLicense": [],
-	"serverLicensePrompt": "",
-	"serverApplicationName": "iskra-server",
-	"serverDataFolderName": ".iskra-server",
-	"tunnelApplicationName": "iskra-tunnel",
-	"win32DirName": "Iskra",
-	"win32NameVersion": "Iskra",
-	"win32RegValueName": "IskraIDE",
-	"win32x64AppId": "{{9D394D01-1728-45A7-B997-A6C82C5452C3}",
-	"win32arm64AppId": "{{0668DD58-2BDE-4101-8CDA-40252DF8875D}",
-	"win32x64UserAppId": "{{8BED5DC1-6C55-46E6-9FE6-18F7E6F7C7F1}",
-	"win32arm64UserAppId": "{{F6C87466-BC82-4A8F-B0FF-18CA366BA4D8}",
-	"win32AppUserModelId": "Iskra.IDE",
-	"win32ShellNameShort": "И&скра",
-	"win32TunnelServiceMutex": "iskra-tunnelservice",
-	"win32TunnelMutex": "iskra-tunnel",
-	"darwinBundleIdentifier": "com.iskraide.code",
-	"linuxIconName": "iskra-ide",
-	"licenseFileName": "LICENSE.txt",
-	"reportIssueUrl": "https://github.com/yourusername/iskra/issues/new",
-	"nodejsRepository": "https://nodejs.org",
-	"urlProtocol": "iskra",
-	"locale": "ru",
-
-	"extensionsGallery": {
-		"serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery",
-		"itemUrl": "https://marketplace.visualstudio.com/items"
-	},
-	"builtInExtensions": [],
-	"linkProtectionTrustedDomains": [
-		"https://github.com/yourusername/iskra",
-		"https://ollama.com"
-	]
+  "nameShort": "Iskra",
+  "nameLong": "Искра IDE",
+  "voidVersion": "1.0.0",
+  "voidRelease": "0001",
+  "applicationName": "iskra",
+  "dataFolderName": ".iskra-ide",
+  "win32MutexName": "iskraide",
+  "licenseName": "MIT",
+  "licenseUrl": "https://github.com/voideditor/void/blob/main/LICENSE.txt",
+  "serverLicenseUrl": "https://github.com/voideditor/void/blob/main/LICENSE.txt",
+  "serverGreeting": [],
+  "serverLicense": [],
+  "serverLicensePrompt": "",
+  "serverApplicationName": "iskra-server",
+  "serverDataFolderName": ".iskra-server",
+  "tunnelApplicationName": "iskra-tunnel",
+  "win32DirName": "Iskra",
+  "win32NameVersion": "Iskra",
+  "win32RegValueName": "IskraIDE",
+  "win32x64AppId": "{{9D394D01-1728-45A7-B997-A6C82C5452C3}",
+  "win32arm64AppId": "{{0668DD58-2BDE-4101-8CDA-40252DF8875D}",
+  "win32x64UserAppId": "{{8BED5DC1-6C55-46E6-9FE6-18F7E6F7C7F1}",
+  "win32arm64UserAppId": "{{F6C87466-BC82-4A8F-B0FF-18CA366BA4D8}",
+  "win32AppUserModelId": "Iskra.IDE",
+  "win32ShellNameShort": "И&скра",
+  "win32TunnelServiceMutex": "iskra-tunnelservice",
+  "win32TunnelMutex": "iskra-tunnel",
+  "darwinBundleIdentifier": "com.iskraide.code",
+  "linuxIconName": "iskra-ide",
+  "licenseFileName": "LICENSE.txt",
+  "reportIssueUrl": "https://github.com/yourusername/iskra/issues/new",
+  "nodejsRepository": "https://nodejs.org",
+  "urlProtocol": "iskra",
+  "locale": "ru",
+  "extensionsGallery": {
+    "serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery",
+    "itemUrl": "https://marketplace.visualstudio.com/items"
+  },
+  "builtInExtensions": [
+    {
+      "name": "vscode-language-pack-ru",
+      "version": "1.108.2026011409",
+      "repo": "https://github.com/Microsoft/vscode-loc",
+      "metadata": {
+        "id": "MS-CEINTL.vscode-language-pack-ru",
+        "publisherId": "MS-CEINTL",
+        "publisherDisplayName": "MS-CEINTL"
+      }
+    }
+  ],
+  "linkProtectionTrustedDomains": [
+    "https://github.com/yourusername/iskra",
+    "https://ollama.com"
+  ]
 }
