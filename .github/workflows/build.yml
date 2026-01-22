@@ -42,13 +42,10 @@ jobs:
     - name: Build VS Code
       run: npm run gulp vscode-win32-x64
     
-    - name: Create System Setup (installer)
-      run: npm run gulp vscode-win32-x64-system-setup
-    
-    - name: Upload installer
+    - name: Upload build folder
       uses: actions/upload-artifact@v4
       with:
-        name: void-ide-windows-x64-installer
+        name: void-ide-windows-x64
         path: |
-          .build/win32-x64/system-setup/*.exe
+          .build/win32-x64/VSCode-win32-x64/**/*
         retention-days: 30
