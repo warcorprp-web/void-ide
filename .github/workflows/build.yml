@@ -42,16 +42,13 @@ jobs:
     - name: Build VS Code
       run: npm run gulp vscode-win32-x64
     
-    - name: Package with electron-builder
-      run: npm run electron-builder -- --win --x64
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create archive
+      run: npm run gulp vscode-win32-x64-archive
     
-    - name: Upload installer
+    - name: Upload build
       uses: actions/upload-artifact@v4
       with:
         name: void-ide-windows-x64
         path: |
-          dist/*.exe
-          dist/*.zip
+          .build/win32-x64/archive/*.zip
         retention-days: 30
