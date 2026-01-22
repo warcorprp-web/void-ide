@@ -35,8 +35,11 @@ jobs:
     
     - name: Install dependencies
       run: npm ci
+    
+    - name: Build React components
+      run: npm run buildreact
       
-    - name: Build VS Code (without minification)
+    - name: Build VS Code
       run: npm run gulp vscode-win32-x64
     
     - name: Package with electron-builder
