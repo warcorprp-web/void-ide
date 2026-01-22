@@ -39,7 +39,7 @@ export enum ThemeSettings {
 }
 
 export enum ThemeSettingDefaults {
-	COLOR_THEME_DARK = 'Default Dark+', // Void changed this from 'Default Dark Modern'
+	COLOR_THEME_DARK = 'Искра Тёмная', // Changed to Iskra Orange theme
 	COLOR_THEME_LIGHT = 'Default Light Modern',
 	COLOR_THEME_HC_DARK = 'Default High Contrast',
 	COLOR_THEME_HC_LIGHT = 'Default High Contrast Light',
@@ -51,30 +51,32 @@ export enum ThemeSettingDefaults {
 	PRODUCT_ICON_THEME = 'Default',
 }
 
-export const COLOR_THEME_DARK_INITIAL_COLORS = { // Void changed this to match dark+
-	'activityBar.activeBorder': '#ffffff',
-	'activityBar.background': '#333333',
-	'activityBar.border': '#454545',
-	'activityBar.foreground': '#ffffff',
-	'activityBar.inactiveForeground': '#ffffff66',
-	'editorGroup.border': '#444444',
-	'editorGroupHeader.tabsBackground': '#252526',
-	'editorGroupHeader.tabsBorder': '#252526',
-	'statusBar.background': '#007ACC',
-	'statusBar.border': '#454545',
-	'statusBar.foreground': '#ffffff',
-	'statusBar.noFolderBackground': '#68217A',
-	'tab.activeBackground': '#2D2D2D',
-	'tab.activeBorder': '#ffffff',
-	'tab.activeBorderTop': '#007ACC',
-	'tab.activeForeground': '#ffffff',
-	'tab.border': '#252526',
-	'textLink.foreground': '#3794ff',
-	'titleBar.activeBackground': '#3C3C3C',
+export const COLOR_THEME_DARK_INITIAL_COLORS = { // Changed to Iskra Orange theme
+	'activityBar.activeBorder': '#ff6600',
+	'activityBar.background': '#181818',
+	'activityBar.border': '#2B2B2B',
+	'activityBar.foreground': '#D7D7D7',
+	'activityBar.inactiveForeground': '#868686',
+	'activityBarBadge.background': '#ff6600',
+	'editorGroup.border': '#FFFFFF17',
+	'editorGroupHeader.tabsBackground': '#181818',
+	'editorGroupHeader.tabsBorder': '#2B2B2B',
+	'focusBorder': '#ff6600',
+	'statusBar.background': '#181818',
+	'statusBar.border': '#2B2B2B',
+	'statusBar.foreground': '#CCCCCC',
+	'statusBar.noFolderBackground': '#1F1F1F',
+	'tab.activeBackground': '#1F1F1F',
+	'tab.activeBorder': '#ff6600',
+	'tab.activeBorderTop': '#ff6600',
+	'tab.activeForeground': '#FFFFFF',
+	'tab.border': '#2B2B2B',
+	'textLink.foreground': '#ff6600',
+	'titleBar.activeBackground': '#181818',
 	'titleBar.activeForeground': '#CCCCCC',
-	'titleBar.border': '#454545',
-	'titleBar.inactiveBackground': '#2C2C2C',
-	'titleBar.inactiveForeground': '#999999',
+	'titleBar.border': '#2B2B2B',
+	'titleBar.inactiveBackground': '#181818',
+	'titleBar.inactiveForeground': '#9D9D9D',
 	'welcomePage.tileBackground': '#252526'
 };
 

@@ -743,7 +743,7 @@ class EditCodeService extends Disposable implements IEditCodeService {
 		const elt: IUndoRedoElement = {
 			type: UndoRedoElementType.Resource,
 			resource: uri,
-			label: 'Void Agent',
+			label: 'Агент Искра',
 			code: 'undoredo.editCode',
 			undo: async () => { opts?.onWillUndo?.(); await this._restoreVoidFileSnapshot(uri, beforeSnapshot) },
 			redo: async () => { if (afterSnapshot) await this._restoreVoidFileSnapshot(uri, afterSnapshot) }
@@ -1615,10 +1615,10 @@ class EditCodeService extends Disposable implements IEditCodeService {
 
 	private _instantlyApplySRBlocks(uri: URI, blocksStr: string) {
 		const blocks = extractSearchReplaceBlocks(blocksStr)
-		if (blocks.length === 0) throw new Error(`No Search/Replace blocks were received!`)
+		if (blocks.length === 0) throw new Error(`Ошибка: Не получены блоки Search/Replace!`)
 
 		const { model } = this._voidModelService.getModel(uri)
-		if (!model) throw new Error(`Error applying Search/Replace blocks: File does not exist.`)
+		if (!model) throw new Error(`Ошибка применения блоков Search/Replace: Файл не существует.`)
 		const modelStr = model.getValue(EndOfLinePreference.LF)
 		// .split('\n').map(l => '\t' + l).join('\n') // for testing purposes only, remember to remove this
 		const modelStrLines = modelStr.split('\n')

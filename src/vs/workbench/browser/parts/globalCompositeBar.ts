@@ -353,6 +353,12 @@ export class AccountsActivityActionViewItem extends AbstractGlobalActivityAction
 		this.initialized = true;
 	}
 
+	// Void: Override to open Void settings instead of showing accounts menu
+	protected override async run(): Promise<void> {
+		// Open Void settings
+		await this.commandService.executeCommand('workbench.action.openVoidSettings');
+	}
+
 	//#region overrides
 
 	protected override async resolveMainMenuActions(accountsMenu: IMenu, disposables: DisposableStore): Promise<IAction[]> {

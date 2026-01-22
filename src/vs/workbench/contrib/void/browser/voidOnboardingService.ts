@@ -28,12 +28,17 @@ export class OnboardingContribution extends Disposable implements IWorkbenchCont
 		// Find the monaco-workbench element using the proper window reference
 		const workbench = targetWindow.document.querySelector('.monaco-workbench');
 
+		console.log('[Onboarding] Initializing onboarding service, workbench found:', !!workbench);
+
 		if (workbench) {
 
 			const onboardingContainer = h('div.void-onboarding-container').root;
 			workbench.appendChild(onboardingContainer);
+			console.log('[Onboarding] Onboarding container created and appended');
 			this.instantiationService.invokeFunction((accessor: ServicesAccessor) => {
+				console.log('[Onboarding] Mounting VoidOnboarding component...');
 				const result = mountVoidOnboarding(onboardingContainer, accessor);
+				console.log('[Onboarding] Mount result:', result);
 				if (result && typeof result.dispose === 'function') {
 					this._register(toDisposable(result.dispose));
 				}

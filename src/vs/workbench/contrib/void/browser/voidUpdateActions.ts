@@ -85,7 +85,7 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 		primary.push({
 			id: 'void.updater.site',
 			enabled: true,
-			label: `Void Site`,
+			label: `Сайт Искра`,
 			tooltip: '',
 			class: undefined,
 			run: () => {
@@ -177,7 +177,7 @@ registerAction2(class extends Action2 {
 		super({
 			f1: true,
 			id: 'void.voidCheckUpdate',
-			title: localize2('voidCheckUpdate', 'Void: Check for Updates'),
+			title: localize2('voidCheckUpdate', 'Искра: Проверить обновления'),
 		});
 	}
 	async run(accessor: ServicesAccessor): Promise<void> {

@@ -1,6 +1,6 @@
 
 /*--------------------------------------------------------------------------------------
- *  Copyright 2025 Glass Devtools, Inc. All rights reserved.
+ *  Copyright 2025 Glass Devtools, Inc. All rights reserv ed.
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
@@ -106,6 +106,12 @@ export const displayInfoOfProviderName = (providerName: ProviderName): DisplayIn
 	else if (providerName === 'awsBedrock') {
 		return { title: 'AWS Bedrock', }
 	}
+	else if (providerName === 'ceillerClaude') {
+		return { title: 'Искра | Anthropic', }
+	}
+	else if (providerName === 'ceillerQwen') {
+		return { title: 'Искра | Alibaba', }
+	}
 
 	throw new Error(`descOfProviderName: Unknown provider name: "${providerName}"`)
 }
@@ -128,6 +134,8 @@ export const subTextMdOfProviderName = (providerName: ProviderName): string => {
 	if (providerName === 'vLLM') return 'Read more about custom [Endpoints here](https://docs.vllm.ai/en/latest/getting_started/quickstart.html#openai-compatible-server).'
 	if (providerName === 'lmStudio') return 'Read more about custom [Endpoints here](https://lmstudio.ai/docs/app/api/endpoints/openai).'
 	if (providerName === 'liteLLM') return 'Read more about endpoints [here](https://docs.litellm.ai/docs/providers/openai_compatible).'
+	if (providerName === 'ceillerClaude') return '⚠️ Требуется авторизация. Модели Claude от Anthropic через Искра. [Войти в настройках](command:workbench.action.openSettings)'
+	if (providerName === 'ceillerQwen') return '⚠️ Требуется авторизация. Модели Qwen от Alibaba через Искра. [Войти в настройках](command:workbench.action.openSettings)'
 
 	throw new Error(`subTextMdOfProviderName: Unknown provider name: "${providerName}"`)
 }
@@ -352,6 +360,18 @@ export const defaultSettingsOfProvider: SettingsOfProvider = {
 		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.awsBedrock),
 		_didFillInProviderSettings: undefined,
 	},
+	ceillerClaude: {
+		...defaultCustomSettings,
+		...defaultProviderSettings.ceillerClaude,
+		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.ceillerClaude),
+		_didFillInProviderSettings: true, // Всегда видимы, авторизация проверяется при запросе
+	},
+	ceillerQwen: {
+		...defaultCustomSettings,
+		...defaultProviderSettings.ceillerQwen,
+		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.ceillerQwen),
+		_didFillInProviderSettings: true, // Всегда видимы, авторизация проверяется при запросе
+	},
 }
 
 
@@ -369,17 +389,17 @@ export type FeatureName = keyof ModelSelectionOfFeature
 export const displayInfoOfFeatureName = (featureName: FeatureName) => {
 	// editor:
 	if (featureName === 'Autocomplete')
-		return 'Autocomplete'
+		return 'Автодополнение'
 	else if (featureName === 'Ctrl+K')
-		return 'Quick Edit'
+		return 'Быстрое редактирование'
 	// sidebar:
 	else if (featureName === 'Chat')
-		return 'Chat'
+		return 'Чат'
 	else if (featureName === 'Apply')
-		return 'Apply'
+		return 'Применить'
 	// source control:
 	else if (featureName === 'SCM')
-		return 'Commit Message Generator'
+		return 'Генератор сообщений коммитов'
 	else
 		throw new Error(`Feature Name ${featureName} not allowed`)
 }

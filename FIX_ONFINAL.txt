@@ -1,0 +1,27 @@
+ИСПРАВЛЕНИЕ: onFinalMessage не вызывается для non-streaming
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди строку 512 (после onText):
+
+				onText({
+					fullText: fullTextSoFar,
+					fullReasoning: fullReasoningSoFar,
+					toolCall: !toolName ? undefined : { name: toolName, rawParams: {}, isDone: false, doneParams: [], id: toolId },
+				});
+			}
+
+ПОСЛЕ строки 512 (после onText, ПЕРЕД закрывающей скобкой) добавь:
+
+				// Вызываем onFinalMessage для завершения и выполнения tool
+				const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId);
+				const toolCallObj = toolCall ? { toolCall } : {};
+				console.log('[Iskra] Calling onFinalMessage with toolCall:', !!toolCall);
+				onFinalMessage({ 
+					fullText: fullTextSoFar, 
+					fullReasoning: fullReasoningSoFar, 
+					anthropicReasoning: null, 
+					...toolCallObj 
+				});
+
+Пересобери, перезапусти - tools заработают полностью!

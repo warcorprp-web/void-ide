@@ -5,14 +5,12 @@
 
 import { localize } from '../../../../nls.js';
 import { Disposable, DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { isMacintosh, isNative, OS } from '../../../../base/common/platform.js';
+import { isMacintosh, isNative } from '../../../../base/common/platform.js';
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
 import { IWorkspaceContextService, WorkbenchState } from '../../../../platform/workspace/common/workspace.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { append, clearNode, $, h } from '../../../../base/browser/dom.js';
-import { KeybindingLabel } from '../../../../base/browser/ui/keybindingLabel/keybindingLabel.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { defaultKeybindingLabelStyles } from '../../../../platform/theme/browser/defaultStyles.js';
 import { editorForeground, registerColor, transparent } from '../../../../platform/theme/common/colorRegistry.js';
 import { IThemeService } from '../../../../platform/theme/common/themeService.js';
 import { isRecentFolder, IWorkspacesService } from '../../../../platform/workspaces/common/workspaces.js';
@@ -25,7 +23,6 @@ import { splitRecentLabel } from '../../../../base/common/labels.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
 
 /* eslint-disable */ // Void
-import { VOID_CTRL_K_ACTION_ID, VOID_CTRL_L_ACTION_ID } from '../../../contrib/void/browser/actionIDs.js';
 import { VIEWLET_ID as REMOTE_EXPLORER_VIEWLET_ID } from '../../../contrib/remote/browser/remoteExplorer.js';
 /* eslint-enable */
 
@@ -116,7 +113,7 @@ export class EditorGroupWatermark extends Disposable {
 			const theme = this.themeService.getColorTheme().type
 			const isDark = theme === ColorScheme.DARK || theme === ColorScheme.HIGH_CONTRAST_DARK
 			elements.icon.style.maxWidth = '220px'
-			elements.icon.style.opacity = '50%'
+			elements.icon.style.opacity = '90%'
 			elements.icon.style.filter = isDark ? '' : 'invert(1)' //brightness(.5)
 		}
 		updateTheme()
@@ -197,8 +194,9 @@ export class EditorGroupWatermark extends Disposable {
 				const openFolderButton = h('button')
 				openFolderButton.root.classList.add('void-openfolder-button')
 				openFolderButton.root.style.display = 'block'
-				openFolderButton.root.style.width = '124px' // Set width to 124px as requested
-				openFolderButton.root.textContent = 'Open Folder'
+				openFolderButton.root.style.width = '150px'
+				openFolderButton.root.style.whiteSpace = 'nowrap'
+				openFolderButton.root.textContent = 'Открыть папку'
 				openFolderButton.root.onclick = () => {
 					this.commandService.executeCommand(isMacintosh && isNative ? OpenFileFolderAction.ID : OpenFolderAction.ID)
 					// if (this.contextKeyService.contextMatchesRules(ContextKeyExpr.and(WorkbenchStateContext.isEqualTo('workspace')))) {
@@ -213,9 +211,9 @@ export class EditorGroupWatermark extends Disposable {
 				const openSSHButton = h('button')
 				openSSHButton.root.classList.add('void-openssh-button')
 				openSSHButton.root.style.display = 'block'
-				openSSHButton.root.style.backgroundColor = '#5a5a5a' // Made darker than the default gray
-				openSSHButton.root.style.width = '124px' // Set width to 124px as requested
-				openSSHButton.root.textContent = 'Open SSH'
+				openSSHButton.root.style.width = '150px'
+				openSSHButton.root.style.whiteSpace = 'nowrap'
+				openSSHButton.root.textContent = 'Открыть SSH'
 				openSSHButton.root.onclick = () => {
 					this.viewsService.openViewContainer(REMOTE_EXPLORER_VIEWLET_ID);
 				}
@@ -283,43 +281,24 @@ export class EditorGroupWatermark extends Disposable {
 			}
 			else {
 
-				// show them Void keybindings
-				const keys = this.keybindingService.lookupKeybinding(VOID_CTRL_L_ACTION_ID);
-				const dl = append(voidIconBox, $('dl'));
-				const dt = append(dl, $('dt'));
-				dt.textContent = 'Chat'
-				const dd = append(dl, $('dd'));
-				const label = new KeybindingLabel(dd, OS, { renderUnboundKeybindings: true, ...defaultKeybindingLabelStyles });
-				if (keys)
-					label.set(keys);
-				this.currentDisposables.add(label);
+				// Show Iskra slogan
+				const sloganDiv = append(voidIconBox, $('div'));
+				sloganDiv.style.textAlign = 'center';
+				sloganDiv.style.fontSize = '18px';
+				sloganDiv.style.fontWeight = '300';
+				sloganDiv.style.color = '#ff6600';
+				sloganDiv.style.marginTop = '20px';
+				sloganDiv.style.letterSpacing = '1px';
+				sloganDiv.textContent = 'Зажги свой код';
 
-
-				const keys2 = this.keybindingService.lookupKeybinding(VOID_CTRL_K_ACTION_ID);
-				const dl2 = append(voidIconBox, $('dl'));
-				const dt2 = append(dl2, $('dt'));
-				dt2.textContent = 'Quick Edit'
-				const dd2 = append(dl2, $('dd'));
-				const label2 = new KeybindingLabel(dd2, OS, { renderUnboundKeybindings: true, ...defaultKeybindingLabelStyles });
-				if (keys2)
-					label2.set(keys2);
-				this.currentDisposables.add(label2);
-
-				// const keys3 = this.keybindingService.lookupKeybinding('workbench.action.openGlobalKeybindings');
-				// const button3 = append(recentsBox, $('button'));
-				// button3.textContent = `Void Settings`
-				// button3.style.display = 'block'
-				// button3.style.marginLeft = 'auto'
-				// button3.style.marginRight = 'auto'
-				// button3.classList.add('void-settings-watermark-button')
-
-				// const label3 = new KeybindingLabel(button3, OS, { renderUnboundKeybindings: true, ...defaultKeybindingLabelStyles });
-				// if (keys3)
-				// 	label3.set(keys3);
-				// button3.onclick = () => {
-				// 	this.commandService.executeCommand(VOID_OPEN_SETTINGS_ACTION_ID)
-				// }
-				// this.currentDisposables.add(label3);
+				// Optional: Add a subtitle
+				const subtitleDiv = append(voidIconBox, $('div'));
+				subtitleDiv.style.textAlign = 'center';
+				subtitleDiv.style.fontSize = '14px';
+				subtitleDiv.style.fontWeight = '300';
+				subtitleDiv.style.color = '#999';
+				subtitleDiv.style.marginTop = '8px';
+				subtitleDiv.textContent = 'AI-помощник для разработчиков';
 
 			}
 

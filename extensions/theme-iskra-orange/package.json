@@ -1,0 +1,23 @@
+{
+	"name": "theme-iskra-orange",
+	"displayName": "Искра Оранжевая Тема",
+	"description": "Оранжевая тема для Искра IDE",
+	"version": "1.0.0",
+	"publisher": "iskra",
+	"license": "MIT",
+	"engines": {
+		"vscode": "*"
+	},
+	"categories": [
+		"Themes"
+	],
+	"contributes": {
+		"themes": [
+			{
+				"label": "Искра Тёмная",
+				"uiTheme": "vs-dark",
+				"path": "./themes/iskra-dark.json"
+			}
+		]
+	}
+}

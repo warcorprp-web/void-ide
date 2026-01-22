@@ -77,13 +77,15 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 				className='
 					flex items-center px-2 py-1.5
 					cursor-pointer
+					hover:bg-void-bg-3 transition-colors duration-200
+					text-void-fg-1
 				'
 				onClick={() => {
 					commandService.executeCommand(VOID_CTRL_L_ACTION_ID)
 					setClickState('clickedOption');
 				}}
 			>
-				<span>Add to Chat</span>
+				<span>Добавить в чат</span>
 				<span className='ml-1 px-1 rounded bg-[var(--vscode-keybindingLabel-background)] text-[var(--vscode-keybindingLabel-foreground)] border border-[var(--vscode-keybindingLabel-border)]'>
 					{ctrlLKeybind.getLabel()}
 				</span>
@@ -97,13 +99,15 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 				className='
 					flex items-center px-2 py-1.5
 					cursor-pointer
+					hover:bg-void-bg-3 transition-colors duration-200
+					text-void-fg-1
 				'
 				onClick={() => {
 					commandService.executeCommand(VOID_CTRL_K_ACTION_ID)
 					setClickState('clickedOption');
 				}}
 			>
-				<span className='ml-1'>Edit Inline</span>
+				<span className='ml-1'>Редактировать</span>
 				<span className='ml-1 px-1 rounded bg-[var(--vscode-keybindingLabel-background)] text-[var(--vscode-keybindingLabel-foreground)] border border-[var(--vscode-keybindingLabel-border)]'>
 					{ctrlKKeybind.getLabel()}
 				</span>
@@ -116,12 +120,13 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 			className='
 				flex items-center px-0.5
 				cursor-pointer
+				hover:bg-void-bg-3 transition-colors duration-200
 			'
 			onClick={() => {
 				setClickState('clickedMore');
 			}}
 		>
-			<MoreVertical className="w-4" />
+			<MoreVertical className="w-4 text-void-fg-2" />
 		</div>
 	</>
 
@@ -131,13 +136,15 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 			className='
 				flex items-center px-2 py-1.5
 				cursor-pointer
+				hover:bg-void-bg-3 transition-colors duration-200
+				text-void-fg-1
 			'
 			onClick={() => {
 				commandService.executeCommand(VOID_OPEN_SETTINGS_ACTION_ID);
 				setClickState('clickedOption');
 			}}
 		>
-			Disable Suggestions?
+			Отключить подсказки?
 		</div>
 
 		{dividerHTML}
@@ -146,20 +153,21 @@ const VoidSelectionHelper = ({ rerenderKey }: VoidSelectionHelperProps) => {
 			className='
 				flex items-center px-0.5
 				cursor-pointer
+				hover:bg-void-bg-3 transition-colors duration-200
 			'
 			onClick={() => {
 				setClickState('init');
 			}}
 		>
-			<MoreVertical className="w-4" />
+			<MoreVertical className="w-4 text-void-fg-2" />
 		</div>
 	</>
 
 	return <div className='
 		pointer-events-auto select-none
 		z-[1000]
-		rounded-sm shadow-md flex flex-nowrap text-nowrap
-		border border-void-border-3 bg-void-bg-2
+		rounded-lg shadow-lg flex flex-nowrap text-nowrap
+		border border-void-border-2 hover:border-[#ff6600] bg-void-bg-2
 		transition-all duration-200
 	'>
 		{clickState === 'init' ? defaultHTML

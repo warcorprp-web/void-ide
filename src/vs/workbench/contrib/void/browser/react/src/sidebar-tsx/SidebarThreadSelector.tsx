@@ -30,7 +30,7 @@ export const PastThreadsList = ({ className = '' }: { className?: string }) => {
 	}
 
 	if (!allThreads) {
-		return <div key="error" className="p-1">{`Error accessing chat history.`}</div>;
+		return <div key="error" className="p-1">{`Ошибка доступа к истории чата.`}</div>;
 	}
 
 	// sorted by most recent to least recent
@@ -49,7 +49,7 @@ export const PastThreadsList = ({ className = '' }: { className?: string }) => {
 				: displayThreads.map((threadId, i) => {
 					const pastThread = allThreads[threadId];
 					if (!pastThread) {
-						return <div key={i} className="p-1">{`Error accessing chat history.`}</div>;
+						return <div key={i} className="p-1">{`Ошибка доступа к истории чата.`}</div>;
 					}
 
 					return (
@@ -66,20 +66,20 @@ export const PastThreadsList = ({ className = '' }: { className?: string }) => {
 			}
 
 			{hasMoreThreads && !showAll && (
-				<div
-					className="text-void-fg-3 opacity-80 hover:opacity-100 hover:brightness-115 cursor-pointer p-1 text-xs"
+				<button
+					className="text-void-fg-2 hover:text-[#ff6600] cursor-pointer px-3 py-2 text-xs font-medium rounded-lg bg-void-bg-2 border border-void-border-2 hover:border-[#ff6600] hover:bg-void-bg-3 transition-all duration-200 shadow-sm hover:shadow-md"
 					onClick={() => setShowAll(true)}
 				>
-					Show {sortedThreadIds.length - numInitialThreads} more...
-				</div>
+					Показать ещё {sortedThreadIds.length - numInitialThreads}...
+				</button>
 			)}
 			{hasMoreThreads && showAll && (
-				<div
-					className="text-void-fg-3 opacity-80 hover:opacity-100 hover:brightness-115 cursor-pointer p-1 text-xs"
+				<button
+					className="text-void-fg-2 hover:text-[#ff6600] cursor-pointer px-3 py-2 text-xs font-medium rounded-lg bg-void-bg-2 border border-void-border-2 hover:border-[#ff6600] hover:bg-void-bg-3 transition-all duration-200 shadow-sm hover:shadow-md"
 					onClick={() => setShowAll(false)}
 				>
-					Show less
-				</div>
+					Показать меньше
+				</button>
 			)}
 		</div>
 	);
@@ -97,9 +97,9 @@ const formatDate = (date: Date) => {
 	yesterday.setDate(yesterday.getDate() - 1);
 
 	if (date >= today) {
-		return 'Today';
+		return 'Сегодня';
 	} else if (date >= yesterday) {
-		return 'Yesterday';
+		return 'Вчера';
 	} else {
 		return `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}`;
 	}
@@ -118,16 +118,18 @@ const formatTime = (date: Date) => {
 const DuplicateButton = ({ threadId }: { threadId: string }) => {
 	const accessor = useAccessor()
 	const chatThreadsService = accessor.get('IChatThreadService')
-	return <IconShell1
-		Icon={Copy}
-		className='size-[11px]'
-		onClick={() => { chatThreadsService.duplicateThread(threadId); }}
+	return <button
+		className="p-1 rounded hover:bg-void-bg-4 transition-colors duration-150"
+		onClick={(e) => { 
+			e.stopPropagation();
+			chatThreadsService.duplicateThread(threadId); 
+		}}
 		data-tooltip-id='void-tooltip'
 		data-tooltip-place='top'
-		data-tooltip-content='Duplicate thread'
+		data-tooltip-content='Дублировать поток'
 	>
-	</IconShell1>
-
+		<Copy className='size-3.5 text-void-fg-3 hover:text-[#ff6600]' />
+	</button>
 }
 
 const TrashButton = ({ threadId }: { threadId: string }) => {
@@ -140,31 +142,44 @@ const TrashButton = ({ threadId }: { threadId: string }) => {
 
 	return (isTrashPressed ?
 		<div className='flex flex-nowrap text-nowrap gap-1'>
-			<IconShell1
-				Icon={X}
-				className='size-[11px]'
-				onClick={() => { setIsTrashPressed(false); }}
+			<button
+				className="p-1 rounded hover:bg-void-bg-4 transition-colors duration-150"
+				onClick={(e) => { 
+					e.stopPropagation();
+					setIsTrashPressed(false); 
+				}}
 				data-tooltip-id='void-tooltip'
 				data-tooltip-place='top'
-				data-tooltip-content='Cancel'
-			/>
-			<IconShell1
-				Icon={Check}
-				className='size-[11px]'
-				onClick={() => { chatThreadsService.deleteThread(threadId); setIsTrashPressed(false); }}
+				data-tooltip-content='Отмена'
+			>
+				<X className='size-3.5 text-void-fg-3 hover:text-void-fg-1' />
+			</button>
+			<button
+				className="p-1 rounded hover:bg-void-bg-4 transition-colors duration-150"
+				onClick={(e) => { 
+					e.stopPropagation();
+					chatThreadsService.deleteThread(threadId); 
+					setIsTrashPressed(false); 
+				}}
 				data-tooltip-id='void-tooltip'
 				data-tooltip-place='top'
-				data-tooltip-content='Confirm'
-			/>
+				data-tooltip-content='Подтвердить'
+			>
+				<Check className='size-3.5 text-[#ff6600] hover:text-[#ff7722]' />
+			</button>
 		</div>
-		: <IconShell1
-			Icon={Trash2}
-			className='size-[11px]'
-			onClick={() => { setIsTrashPressed(true); }}
+		: <button
+			className="p-1 rounded hover:bg-void-bg-4 transition-colors duration-150"
+			onClick={(e) => { 
+				e.stopPropagation();
+				setIsTrashPressed(true); 
+			}}
 			data-tooltip-id='void-tooltip'
 			data-tooltip-place='top'
-			data-tooltip-content='Delete thread'
-		/>
+			data-tooltip-content='Удалить поток'
+		>
+			<Trash2 className='size-3.5 text-void-fg-3 hover:text-red-500' />
+		</button>
 	)
 }
 
@@ -233,7 +248,12 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 	return <div
 		key={pastThread.id}
 		className={`
-			py-1 px-2 rounded text-sm bg-zinc-700/5 hover:bg-zinc-700/10 dark:bg-zinc-300/5 dark:hover:bg-zinc-300/10 cursor-pointer opacity-80 hover:opacity-100
+			py-2 px-3 rounded-lg text-sm 
+			bg-void-bg-2 border border-void-border-2
+			hover:border-[#ff6600] hover:bg-void-bg-3 
+			cursor-pointer 
+			transition-all duration-200
+			shadow-sm hover:shadow-md
 		`}
 		onClick={() => {
 			chatThreadsService.switchToThread(pastThread.id);
@@ -241,28 +261,28 @@ const PastThreadElement = ({ pastThread, idx, hoveredIdx, setHoveredIdx, isRunni
 		onMouseEnter={() => setHoveredIdx(idx)}
 		onMouseLeave={() => setHoveredIdx(null)}
 	>
-		<div className="flex items-center justify-between gap-1">
+		<div className="flex items-center justify-between gap-2">
 			<span className="flex items-center gap-2 min-w-0 overflow-hidden">
 				{/* spinner */}
-				{isRunning === 'LLM' || isRunning === 'tool' || isRunning === 'idle' ? <LoaderCircle className="animate-spin bg-void-stroke-1 flex-shrink-0 flex-grow-0" size={14} />
+				{isRunning === 'LLM' || isRunning === 'tool' || isRunning === 'idle' ? <LoaderCircle className="animate-spin text-[#ff6600] flex-shrink-0 flex-grow-0" size={14} />
 					:
-					isRunning === 'awaiting_user' ? <MessageCircleQuestion className="bg-void-stroke-1 flex-shrink-0 flex-grow-0" size={14} />
+					isRunning === 'awaiting_user' ? <MessageCircleQuestion className="text-[#ff6600] flex-shrink-0 flex-grow-0" size={14} />
 						:
 						null}
 				{/* name */}
-				<span className="truncate overflow-hidden text-ellipsis"
+				<span className="truncate overflow-hidden text-ellipsis text-void-fg-1 font-medium"
 					data-tooltip-id='void-tooltip'
-					data-tooltip-content={numMessages + ' messages'}
+					data-tooltip-content={numMessages + ' сообщений'}
 					data-tooltip-place='top'
 				>{firstMsg}</span>
 
 				{/* <span className='opacity-60'>{`(${numMessages})`}</span> */}
 			</span>
 
-			<div className="flex items-center gap-x-1 opacity-60">
+			<div className="flex items-center gap-x-2 text-void-fg-3 text-xs flex-shrink-0">
 				{idx === hoveredIdx ?
 					<>
-						{/* trash icon */}
+						{/* duplicate icon */}
 						<DuplicateButton threadId={pastThread.id} />
 
 						{/* trash icon */}

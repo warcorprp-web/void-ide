@@ -27,7 +27,7 @@
 /* Renamed from void-watermark-button to void-openfolder-button */
 .void-openfolder-button {
     padding: 8px 20px;
-    background-color: #306dce;
+    background-color: #ff6600;
     color: white;
     border: none;
     border-radius: 4px;
@@ -37,17 +37,17 @@
 	transition: background-color 0.2s ease;
 }
 .void-openfolder-button:hover {
-    background-color: #2563eb;
+    background-color: #ff7722;
 }
 .void-openfolder-button:active {
-    background-color: #2563eb;
+    background-color: #ff7722;
 }
 
-/* Added for Open SSH button with slightly darker color */
+/* Added for Open SSH button with white color */
 .void-openssh-button {
     padding: 8px 20px;
-    background-color: #656565; /* Slightly darker than the #5a5a5a in the TS file */
-    color: white;
+    background-color: white;
+    color: black;
     border: none;
     border-radius: 4px;
     outline: none !important;
@@ -56,10 +56,10 @@
     transition: background-color 0.2s ease;
 }
 .void-openssh-button:hover {
-    background-color: #474747; /* Darker on hover */
+    background-color: #f0f0f0;
 }
 .void-openssh-button:active {
-    background-color: #474747;
+    background-color: #f0f0f0;
 }
 
 

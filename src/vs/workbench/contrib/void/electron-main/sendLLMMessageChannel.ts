@@ -85,7 +85,7 @@ export class LLMMessageChannel implements IServerChannel {
 			}
 		}
 		catch (e) {
-			console.log('llmMessageChannel: Call Error:', e)
+			console.error('llmMessageChannel: Call Error:', e)
 		}
 	}
 
@@ -105,7 +105,6 @@ export class LLMMessageChannel implements IServerChannel {
 				this.llmMessageEmitters.onFinalMessage.fire({ requestId, ...p });
 			},
 			onError: (p) => {
-				console.log('sendLLM: firing err');
 				this.llmMessageEmitters.onError.fire({ requestId, ...p });
 			},
 			abortRef: this._infoOfRunningRequest[requestId].abortRef,

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { localize } from '../../../../nls.js';
-import { fromNow } from '../../../../base/common/date.js';
 import { isLinuxSnap } from '../../../../base/common/platform.js';
 import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
 import { AbstractDialogHandler, IConfirmation, IConfirmationResult, IPrompt, IAsyncPromptResult } from '../../../../platform/dialogs/common/dialogs.js';
@@ -81,11 +80,8 @@ export class NativeDialogHandler extends AbstractDialogHandler {
 
 		const detailString = (useAgo: boolean): string => {
 			return localize({ key: 'aboutDetail', comment: ['Electron, Chromium, Node.js and V8 are product names that need no translation'] },
-				"VSCode Version: {0}\nVoid Version: {1}\nCommit: {2}\nDate: {3}\nElectron: {4}\nElectronBuildId: {5}\nChromium: {6}\nNode.js: {7}\nV8: {8}\nOS: {9}",
+				"🔥 Искра IDE\n\nВерсия: {0}\n\n⚡ Технологии:\nElectron: {1}\nElectron Build: {2}\nChromium: {3}\nNode.js: {4}\nV8: {5}\n\n💻 Система:\n{6}",
 				version,
-				this.productService.voidVersion || 'Unknown', // Void added this
-				this.productService.commit || 'Unknown',
-				this.productService.date ? `${this.productService.date}${useAgo ? ' (' + fromNow(new Date(this.productService.date), true) + ')' : ''}` : 'Unknown',
 				process.versions['electron'],
 				process.versions['microsoft-build'],
 				process.versions['chrome'],
@@ -100,10 +96,10 @@ export class NativeDialogHandler extends AbstractDialogHandler {
 
 		const { response } = await this.nativeHostService.showMessageBox({
 			type: 'info',
-			message: this.productService.nameLong,
+			message: '🔥 ' + this.productService.nameLong,
 			detail: `\n${detail}`,
 			buttons: [
-				localize({ key: 'copy', comment: ['&& denotes a mnemonic'] }, "&&Copy"),
+				localize({ key: 'copy', comment: ['&& denotes a mnemonic'] }, "&&Копировать"),
 				localize('okButton', "OK")
 			],
 			targetWindowId: getActiveWindow().vscodeWindowId

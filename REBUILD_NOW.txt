@@ -1,0 +1,18 @@
+ПРОБЛЕМА НАЙДЕНА!
+
+Claude работает потому что использует STREAMING (другая функция sendAnthropicChat).
+Qwen использует NON-STREAMING (sendOpenAICompatibleChat) где мы добавили патч.
+
+Патч ПРАВИЛЬНЫЙ (return добавлен на строке 524), но Void НЕ ПЕРЕСОБРАН!
+
+СРОЧНО:
+1. cd C:\void\void
+2. yarn compile (или yarn watch)
+3. Дождись окончания
+4. Закрой ВСЕ окна Void
+5. Запусти заново
+
+После пересборки в логах появится:
+[Iskra] Calling onFinalMessage with toolCall: true
+
+И Qwen заработает как Claude!

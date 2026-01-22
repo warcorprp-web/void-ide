@@ -59,7 +59,7 @@ registerAction2(class extends Action2 {
 		super({
 			id: 'voidDebugInfo',
 			f1: true,
-			title: localize2('voidMetricsDebug', 'Void: Log Debug Info'),
+			title: localize2('voidMetricsDebug', 'Искра: Логировать отладочную информацию'),
 		});
 	}
 	async run(accessor: ServicesAccessor): Promise<void> {

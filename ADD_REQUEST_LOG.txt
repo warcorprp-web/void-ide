@@ -1,0 +1,17 @@
+ДОБАВЬ ЛОГИРОВАНИЕ ЗАПРОСА
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+После строки где выводится "Final request options", добавь:
+
+	// DEBUG: Логируем полный запрос
+	console.log('[Iskra] Full request body:', JSON.stringify({
+		model: options.model,
+		messages: options.messages,
+		tools: options.tools,
+		stream: options.stream
+	}, null, 2));
+
+Это покажет ЧТО ИМЕННО отправляется в API.
+
+

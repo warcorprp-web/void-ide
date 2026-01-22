@@ -159,7 +159,7 @@ class GenerateCommitMessageService extends Disposable implements IGenerateCommit
 				onAbort: () => {
 					reject(new CancellationError())
 				},
-				logging: { loggingName: 'VoidSCM - Commit Message' },
+				logging: { loggingName: 'ИскраSCM - Сообщение коммита' },
 			})
 		})
 	}
@@ -177,7 +177,7 @@ class GenerateCommitMessageService extends Disposable implements IGenerateCommit
 	private onError(error: any) {
 		if (!isCancellationError(error)) {
 			console.error(error)
-			this.notificationService.error(localize2('voidFailedToGenerateCommitMessage', 'Failed to generate commit message.').value)
+			this.notificationService.error(localize2('voidFailedToGenerateCommitMessage', 'Не удалось сгенерировать сообщение коммита.').value)
 		}
 	}
 }
@@ -186,9 +186,9 @@ class GenerateCommitMessageAction extends Action2 {
 	constructor() {
 		super({
 			id: 'void.generateCommitMessageAction',
-			title: localize2('voidCommitMessagePrompt', 'Void: Generate Commit Message'),
+			title: localize2('voidCommitMessagePrompt', 'Искра: Сгенерировать сообщение коммита'),
 			icon: ThemeIcon.fromId('sparkle'),
-			tooltip: localize2('voidCommitMessagePromptTooltip', 'Void: Generate Commit Message'),
+			tooltip: localize2('voidCommitMessagePromptTooltip', 'Искра: Сгенерировать сообщение коммита'),
 			f1: true,
 			menu: [{
 				id: MenuId.SCMInputBox,
@@ -208,9 +208,9 @@ class LoadingGenerateCommitMessageAction extends Action2 {
 	constructor() {
 		super({
 			id: 'void.loadingGenerateCommitMessageAction',
-			title: localize2('voidCommitMessagePromptCancel', 'Void: Cancel Commit Message Generation'),
+			title: localize2('voidCommitMessagePromptCancel', 'Искра: Отменить генерацию сообщения коммита'),
 			icon: ThemeIcon.fromId('stop-circle'),
-			tooltip: localize2('voidCommitMessagePromptCancelTooltip', 'Void: Cancel Commit Message Generation'),
+			tooltip: localize2('voidCommitMessagePromptCancelTooltip', 'Искра: Отменить генерацию сообщения коммита'),
 			f1: false, //Having a cancel command in the command palette is more confusing than useful.
 			menu: [{
 				id: MenuId.SCMInputBox,

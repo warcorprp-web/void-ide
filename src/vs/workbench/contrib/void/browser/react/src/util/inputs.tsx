@@ -1104,35 +1104,43 @@ export const VoidSlider = ({
 
 					{/* Track */}
 					<div
-						className={`relative ${size === 'xxs' ? 'h-0.5' :
-							size === 'xs' ? 'h-1' :
-								size === 'sm' ? 'h-1.5' :
-									size === 'sm+' ? 'h-2' : 'h-2.5'
-							} bg-void-bg-2 rounded-full cursor-pointer`}
+						className={`relative ${size === 'xxs' ? 'h-1' :
+							size === 'xs' ? 'h-1.5' :
+								size === 'sm' ? 'h-2' :
+									size === 'sm+' ? 'h-2.5' : 'h-3'
+							} bg-void-bg-3 rounded-full cursor-pointer`}
 						onClick={handleTrackClick}
 					>
-						{/* Filled part of track */}
+						{/* Filled part of track - ОРАНЖЕВЫЙ */}
 						<div
-							className={`absolute left-0 ${size === 'xxs' ? 'h-0.5' :
-								size === 'xs' ? 'h-1' :
-									size === 'sm' ? 'h-1.5' :
-										size === 'sm+' ? 'h-2' : 'h-2.5'
-								} bg-void-fg-1 rounded-full`}
-							style={{ width: `${percentage}%` }}
+							className={`absolute left-0 ${size === 'xxs' ? 'h-1' :
+								size === 'xs' ? 'h-1.5' :
+									size === 'sm' ? 'h-2' :
+										size === 'sm+' ? 'h-2.5' : 'h-3'
+								} rounded-full transition-all duration-200`}
+							style={{ 
+								width: `${percentage}%`,
+								background: 'linear-gradient(90deg, #ff6600 0%, #ff7722 100%)'
+							}}
 						/>
 					</div>
 
-					{/* Thumb */}
+					{/* Thumb - ОРАНЖЕВЫЙ */}
 					<div
 						className={`absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2
-							${size === 'xxs' ? 'h-2 w-2' :
-								size === 'xs' ? 'h-2.5 w-2.5' :
-									size === 'sm' ? 'h-3 w-3' :
-										size === 'sm+' ? 'h-3.5 w-3.5' : 'h-4 w-4'
+							${size === 'xxs' ? 'h-3 w-3' :
+								size === 'xs' ? 'h-3.5 w-3.5' :
+									size === 'sm' ? 'h-4 w-4' :
+										size === 'sm+' ? 'h-4.5 w-4.5' : 'h-5 w-5'
 							}
-							bg-void-fg-1 rounded-full shadow-md ${disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}
-							border border-void-fg-1`}
-						style={{ left: `${percentage}%`, zIndex: 2 }}  // Ensure thumb is above the invisible clickable area
+							rounded-full shadow-lg ${disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing hover:shadow-xl'}
+							border-2 transition-all duration-200`}
+						style={{ 
+							left: `${percentage}%`, 
+							zIndex: 2,
+							background: 'linear-gradient(135deg, #ff6600 0%, #ff7722 100%)',
+							borderColor: '#ff7722'
+						}}
 						onMouseDown={(e) => {
 							if (disabled) return;
 
@@ -1975,7 +1983,7 @@ export const VoidDiffEditor = ({ uri, searchReplaceBlocks, language }: { uri?: a
 
 	// If no blocks, show empty state
 	if (blocks.length === 0) {
-		return <div className="w-full p-4 text-void-fg-4 text-sm">No changes found</div>;
+		return <div className="w-full p-4 text-void-fg-4 text-sm">Изменения не найдены</div>;
 	}
 
 	// Display all blocks

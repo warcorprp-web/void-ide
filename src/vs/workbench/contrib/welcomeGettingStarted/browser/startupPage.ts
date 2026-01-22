@@ -49,7 +49,7 @@ export class StartupPageEditorResolverContribution implements IWorkbenchContribu
 			`${GettingStartedInput.RESOURCE.scheme}:/**`,
 			{
 				id: GettingStartedInput.ID,
-				label: localize('welcome.displayName', "Welcome Page"),
+				label: localize('welcome.displayName', "Добро пожаловать в Искра IDE"),
 				priority: RegisteredEditorPriority.builtin,
 			},
 			{

@@ -1,0 +1,5 @@
+﻿	const potentialTools = openAITools(chatMode, mcpTools)
+	const nativeToolsObj = potentialTools && specialToolFormat === 'openai-style' ?
+		{ tools: potentialTools } as const
+		: {}
+

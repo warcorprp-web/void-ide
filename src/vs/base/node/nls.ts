@@ -44,7 +44,6 @@ export async function resolveNLSConfiguration({ userLocale, osLocale, userDataPa
 	if (
 		process.env['VSCODE_DEV'] ||
 		userLocale === 'pseudo' ||
-		userLocale.startsWith('en') ||
 		!commit ||
 		!userDataPath
 	) {

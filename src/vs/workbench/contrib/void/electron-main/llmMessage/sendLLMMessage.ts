@@ -24,11 +24,11 @@ export const sendLLMMessage = async ({
 	chatMode,
 	separateSystemMessage,
 	mcpTools,
-}: SendLLMMessageParams,
+	iskraAuth, // Данные авторизации Искра
+}: SendLLMMessageParams & { iskraAuth?: { token: string; userData: any } },
 
 	metricsService: IMetricsService
 ) => {
-
 
 	const { providerName, modelName } = modelSelection
 
@@ -78,7 +78,7 @@ export const sendLLMMessage = async ({
 
 		// handle failed to fetch errors, which give 0 information by design
 		if (errorMessage === 'TypeError: fetch failed')
-			errorMessage = `Failed to fetch from ${displayInfoOfProviderName(providerName).title}. This likely means you specified the wrong endpoint in Void's Settings, or your local model provider like Ollama is powered off.`
+			errorMessage = `Не удалось получить данные от ${displayInfoOfProviderName(providerName).title}. Скорее всего, вы указали неверный endpoint в настройках Искра, или ваш локальный провайдер моделей (например, Ollama) выключен.`
 
 		captureLLMEvent(`${loggingName} - Error`, { error: errorMessage })
 		onError_({ message: errorMessage, fullError })
@@ -103,29 +103,29 @@ export const sendLLMMessage = async ({
 	try {
 		const implementation = sendLLMMessageToProviderImplementation[providerName]
 		if (!implementation) {
-			onError({ message: `Error: Provider "${providerName}" not recognized.`, fullError: null })
+			onError({ message: `Ошибка: Провайдер "${providerName}" не распознан.`, fullError: null })
 			return
 		}
 		const { sendFIM, sendChat } = implementation
 		if (messagesType === 'chatMessages') {
-			await sendChat({ messages: messages_, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName, _setAborter, providerName, separateSystemMessage, chatMode, mcpTools })
+			await sendChat({ messages: messages_, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName, _setAborter, providerName, separateSystemMessage, chatMode, mcpTools, iskraAuth })
 			return
 		}
 		if (messagesType === 'FIMMessage') {
 			if (sendFIM) {
-				await sendFIM({ messages: messages_, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName, _setAborter, providerName, separateSystemMessage })
+				await sendFIM({ messages: messages_, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName, _setAborter, providerName, separateSystemMessage, iskraAuth })
 				return
 			}
-			onError({ message: `Error running Autocomplete with ${providerName} - ${modelName}.`, fullError: null })
+			onError({ message: `Ошибка автодополнения с ${providerName} - ${modelName}.`, fullError: null })
 			return
 		}
-		onError({ message: `Error: Message type "${messagesType}" not recognized.`, fullError: null })
+		onError({ message: `Ошибка: Тип сообщения "${messagesType}" не распознан.`, fullError: null })
 		return
 	}
 
 	catch (error) {
 		if (error instanceof Error) { onError({ message: error + '', fullError: error }) }
-		else { onError({ message: `Unexpected Error in sendLLMMessage: ${error}`, fullError: error }); }
+		else { onError({ message: `Неожиданная ошибка в sendLLMMessage: ${error}`, fullError: error }); }
 		// ; (_aborter as any)?.()
 		// _didAbort = true
 	}

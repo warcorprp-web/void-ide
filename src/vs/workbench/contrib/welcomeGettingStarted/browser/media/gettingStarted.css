@@ -941,11 +941,8 @@
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer button.emphasis {
-	color: var(--vscode-button-foreground);
-}
-
-.monaco-workbench .part.editor > .content .gettingStartedContainer button.emphasis {
-	background: var(--vscode-button-background);
+	color: #ffffff;
+	background: #ff6600 !important; /* Оранжевый цвет для Искра IDE */
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideDetails .getting-started-step .codicon-getting-started-step-unchecked {
@@ -953,7 +950,7 @@
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer button.emphasis:hover {
-	background: var(--vscode-button-hoverBackground);
+	background: #ff7722 !important; /* Светлее при наведении */
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer a:not(.hide-category-button) {

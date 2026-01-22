@@ -1,0 +1,37 @@
+ИСПРАВЛЕНИЕ: Модели не отображаются
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\common\voidSettingsTypes.ts
+
+Найди строки 363-372:
+
+	ceillerClaude: {
+		...defaultCustomSettings,
+		...defaultProviderSettings.ceillerClaude,
+		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.ceillerClaude),
+	},
+	ceillerQwen: {
+		...defaultCustomSettings,
+		...defaultProviderSettings.ceillerQwen,
+		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.ceillerQwen),
+	},
+
+Замени на:
+
+	ceillerClaude: {
+		...defaultCustomSettings,
+		...defaultProviderSettings.ceillerClaude,
+		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.ceillerClaude),
+		_didFillInProviderSettings: undefined,
+	},
+	ceillerQwen: {
+		...defaultCustomSettings,
+		...defaultProviderSettings.ceillerQwen,
+		...modelInfoOfDefaultModelNames(defaultModelsOfProvider.ceillerQwen),
+		_didFillInProviderSettings: undefined,
+	},
+
+Сохрани, пересобери:
+cd C:\void\void
+npm run compile
+
+Перезапусти Void - модели должны появиться!

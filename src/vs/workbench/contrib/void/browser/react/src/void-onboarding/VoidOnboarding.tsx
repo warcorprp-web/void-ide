@@ -8,10 +8,16 @@ import { useAccessor, useIsDark, useSettingsState } from '../util/services.js';
 import { Brain, Check, ChevronRight, DollarSign, ExternalLink, Lock, X } from 'lucide-react';
 import { displayInfoOfProviderName, ProviderName, providerNames, localProviderNames, featureNames, FeatureName, isFeatureNameDisabled } from '../../../../common/voidSettingsTypes.js';
 import { ChatMarkdownRender } from '../markdown/ChatMarkdownRender.js';
-import { OllamaSetupInstructions, OneClickSwitchButton, SettingsForProvider, ModelDump } from '../void-settings-tsx/Settings.js';
+// import { OllamaSetupInstructions, OneClickSwitchButton, SettingsForProvider, ModelDump } from '../void-settings-tsx/Settings.js';
 import { ColorScheme } from '../../../../../../../platform/theme/common/theme.js';
 import ErrorBoundary from '../sidebar-tsx/ErrorBoundary.js';
 import { isLinux } from '../../../../../../../base/common/platform.js';
+
+// Заглушки для удаленных компонентов
+const OllamaSetupInstructions = () => null;
+const OneClickSwitchButton = () => null;
+const SettingsForProvider = () => null;
+const ModelDump = () => null;
 
 const OVERRIDE_VALUE = false
 
@@ -52,7 +58,7 @@ const VoidIcon = () => {
 			const isDark = theme === ColorScheme.DARK || theme === ColorScheme.HIGH_CONTRAST_DARK
 			if (divRef.current) {
 				divRef.current.style.maxWidth = '220px'
-				divRef.current.style.opacity = '50%'
+				divRef.current.style.opacity = '80%'
 				divRef.current.style.filter = isDark ? '' : 'invert(1)' //brightness(.5)
 			}
 		}
@@ -221,28 +227,12 @@ const AddProvidersPage = ({ pageIndex, setPageIndex }: { pageIndex: number, setP
 							>*</span>
 						)}
 					</div>
-					<div>
-						<SettingsForProvider providerName={providerName} showProviderTitle={false} showProviderSuggestions={true} />
-
-					</div>
+				
 					{providerName === 'ollama' && <OllamaSetupInstructions />}
 				</div>
 			))}
 
-			{(currentTab === 'Local' || currentTab === 'Cloud/Other') && (
-				<div className="w-full max-w-xl mt-8 bg-void-bg-2/50 rounded-lg p-6 border border-void-border-4">
-					<div className="flex items-center gap-2 mb-4">
-						<div className="text-xl font-medium">Models</div>
-					</div>
-
-					{currentTab === 'Local' && (
-						<div className="text-sm opacity-80 text-void-fg-3 my-4 w-full">Local models should be detected automatically. You can add custom models below.</div>
-					)}
-
-					{currentTab === 'Local' && <ModelDump filteredProviders={localProviderNames} />}
-					{currentTab === 'Cloud/Other' && <ModelDump filteredProviders={cloudProviders} />}
-				</div>
-			)}
+		
 
 
 
@@ -464,6 +454,363 @@ const PrimaryActionButton = ({ children, className, ringSize, ...props }: { chil
 	)
 }
 
+// OTP Input Component - 6 отдельных полей для кода
+const OTPInput = ({ value, onChange, disabled }: { value: string; onChange: (val: string) => void; disabled?: boolean }) => {
+	const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+	const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+	useEffect(() => {
+		// Синхронизация с внешним значением
+		if (value.length === 6) {
+			setOtp(value.split(''));
+		}
+	}, [value]);
+
+	const handleChange = (index: number, val: string) => {
+		if (disabled) return;
+		
+		// Разрешаем только цифры
+		const newVal = val.replace(/[^0-9]/g, '');
+		if (newVal.length > 1) return;
+
+		const newOtp = [...otp];
+		newOtp[index] = newVal;
+		setOtp(newOtp);
+		onChange(newOtp.join(''));
+
+		// Автофокус на следующее поле
+		if (newVal && index < 5) {
+			inputRefs.current[index + 1]?.focus();
+		}
+	};
+
+	const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === 'Backspace' && !otp[index] && index > 0) {
+			inputRefs.current[index - 1]?.focus();
+		}
+	};
+
+	const handlePaste = (e: React.ClipboardEvent) => {
+		e.preventDefault();
+		const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+		const newOtp = pastedData.split('').concat(Array(6 - pastedData.length).fill(''));
+		setOtp(newOtp);
+		onChange(newOtp.join(''));
+		
+		// Фокус на последнее заполненное поле
+		const lastFilledIndex = Math.min(pastedData.length, 5);
+		inputRefs.current[lastFilledIndex]?.focus();
+	};
+
+	return (
+		<div className="flex gap-2 justify-center">
+			{otp.map((digit, index) => (
+				<input
+					key={index}
+					ref={(el) => (inputRefs.current[index] = el)}
+					type="text"
+					inputMode="numeric"
+					maxLength={1}
+					value={digit}
+					onChange={(e) => handleChange(index, e.target.value)}
+					onKeyDown={(e) => handleKeyDown(index, e)}
+					onPaste={handlePaste}
+					disabled={disabled}
+					className="w-12 h-14 text-center text-2xl font-semibold rounded-lg bg-void-bg-3 border-2 border-void-border-2 text-void-fg-1 focus:outline-none focus:border-[#ff6600] disabled:opacity-50 transition-colors"
+					style={{ caretColor: '#ff6600' }}
+				/>
+			))}
+		</div>
+	);
+};
+
+// Iskra Auth Page - страница входа/регистрации
+const IskraAuthPage = ({ pageIndex, setPageIndex }: { pageIndex: number; setPageIndex: (index: number) => void }) => {
+	const [isLogin, setIsLogin] = useState(true);
+	const [registrationStep, setRegistrationStep] = useState<'email' | 'code' | 'password'>('email');
+	const [email, setEmail] = useState('');
+	const [code, setCode] = useState('');
+	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+		if (errorMessage) {
+			const timeout = window.setTimeout(() => setErrorMessage(null), 5000);
+			return () => window.clearTimeout(timeout);
+		}
+	}, [errorMessage]);
+
+	const handleSendCode = async () => {
+		if (!email) {
+			setErrorMessage("Пожалуйста, введите email");
+			return;
+		}
+		setIsLoading(true);
+		try {
+			const response = await fetch('https://cli.cryptocatslab.ru/auth/send-code', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email })
+			});
+			if (!response.ok) throw new Error((await response.json()).message || 'Ошибка отправки кода');
+			setRegistrationStep('code');
+		} catch (error: any) {
+			setErrorMessage(error.message);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleVerifyCode = async () => {
+		if (!code) {
+			setErrorMessage("Пожалуйста, введите код");
+			return;
+		}
+		setIsLoading(true);
+		try {
+			const response = await fetch('https://cli.cryptocatslab.ru/auth/verify-email', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email, code })
+			});
+			if (!response.ok) throw new Error((await response.json()).message || 'Неверный код');
+			setRegistrationStep('password');
+		} catch (error: any) {
+			setErrorMessage(error.message);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleCompleteRegistration = async () => {
+		if (!password || !confirmPassword) {
+			setErrorMessage("Пожалуйста, заполните все поля");
+			return;
+		}
+		if (password !== confirmPassword) {
+			setErrorMessage("Пароли не совпадают");
+			return;
+		}
+		setIsLoading(true);
+		try {
+			// Генерируем deviceId как в Settings.tsx
+			const deviceId = localStorage.getItem('iskra.deviceId') || 
+				`device-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+			localStorage.setItem('iskra.deviceId', deviceId);
+
+			const response = await fetch('https://cli.cryptocatslab.ru/auth/complete-registration', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email, password, deviceId }) // Используем deviceId, а не code!
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				throw new Error(errorData.error || 'Ошибка регистрации');
+			}
+			const data = await response.json();
+			localStorage.setItem('iskra.auth.token', data.token);
+			localStorage.setItem('iskra.auth.user', JSON.stringify(data.user));
+			setPageIndex(pageIndex + 1);
+		} catch (error: any) {
+			setErrorMessage(error.message);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleLogin = async () => {
+		if (!email || !password) {
+			setErrorMessage("Пожалуйста, заполните все поля");
+			return;
+		}
+		setIsLoading(true);
+		try {
+			const response = await fetch('https://cli.cryptocatslab.ru/auth/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email, password })
+			});
+			if (!response.ok) throw new Error((await response.json()).message || 'Ошибка входа');
+			const data = await response.json();
+			localStorage.setItem('iskra.auth.token', data.token);
+			localStorage.setItem('iskra.auth.user', JSON.stringify(data.user));
+			setPageIndex(pageIndex + 1);
+		} catch (error: any) {
+			setErrorMessage(error.message);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	return (
+		<div className="flex flex-col items-center space-y-6 w-full max-w-[480px] mx-auto">
+			{/* Заголовок */}
+			<div className="text-center mb-2">
+				<div className="text-4xl font-bold mb-2">
+					{isLogin ? 'Вход' : 'Регистрация'}
+				</div>
+				<div className="text-sm text-void-fg-3">
+					{isLogin 
+						? 'Войдите в свой аккаунт Искра' 
+						: registrationStep === 'email' ? 'Создайте новый аккаунт'
+						: registrationStep === 'code' ? 'Подтвердите ваш email'
+						: 'Создайте пароль'}
+				</div>
+			</div>
+
+			{/* Форма */}
+			<div className="w-full bg-void-bg-1 rounded-xl p-8 border border-void-border-2 shadow-lg">
+				{/* Email */}
+				{(isLogin || registrationStep === 'email') && (
+					<div className="mb-5">
+						<label className="block text-sm font-medium text-void-fg-2 mb-2">Email</label>
+						<input
+							type="email"
+							value={email}
+							onChange={(e) => setEmail(e.target.value)}
+							disabled={!isLogin && registrationStep !== 'email'}
+							className="w-full px-4 py-3 rounded-lg bg-void-bg-3 border-2 border-void-border-2 text-void-fg-1 focus:outline-none focus:border-[#ff6600] disabled:opacity-50 transition-colors"
+							placeholder="your@email.com"
+							style={{ caretColor: '#ff6600' }}
+						/>
+					</div>
+				)}
+
+				{/* OTP Code */}
+				{!isLogin && registrationStep === 'code' && (
+					<div className="mb-5">
+						<label className="block text-sm font-medium text-void-fg-2 mb-3 text-center">Код подтверждения</label>
+						<OTPInput value={code} onChange={setCode} disabled={isLoading} />
+						<div className="text-xs text-void-fg-3 mt-3 text-center">
+							Код отправлен на <span className="text-[#ff6600]">{email}</span>
+						</div>
+					</div>
+				)}
+
+				{/* Password */}
+				{(isLogin || registrationStep === 'password') && (
+					<div className="mb-5">
+						<label className="block text-sm font-medium text-void-fg-2 mb-2">Пароль</label>
+						<input
+							type="password"
+							value={password}
+							onChange={(e) => setPassword(e.target.value)}
+							className="w-full px-4 py-3 rounded-lg bg-void-bg-3 border-2 border-void-border-2 text-void-fg-1 focus:outline-none focus:border-[#ff6600] transition-colors"
+							placeholder="••••••••"
+							style={{ caretColor: '#ff6600' }}
+						/>
+					</div>
+				)}
+
+				{/* Confirm Password */}
+				{!isLogin && registrationStep === 'password' && (
+					<div className="mb-5">
+						<label className="block text-sm font-medium text-void-fg-2 mb-2">Подтвердите пароль</label>
+						<input
+							type="password"
+							value={confirmPassword}
+							onChange={(e) => setConfirmPassword(e.target.value)}
+							className="w-full px-4 py-3 rounded-lg bg-void-bg-3 border-2 border-void-border-2 text-void-fg-1 focus:outline-none focus:border-[#ff6600] transition-colors"
+							placeholder="••••••••"
+							style={{ caretColor: '#ff6600' }}
+						/>
+					</div>
+				)}
+
+				{/* Error Message */}
+				{errorMessage && (
+					<div className="mb-4 p-3 rounded-lg bg-[#ff6600]/10 border border-[#ff6600]/30">
+						<div className="text-sm text-[#ff6600] text-center">{errorMessage}</div>
+					</div>
+				)}
+
+				{/* Submit Button */}
+				<button
+					onClick={() => {
+						if (isLogin) handleLogin();
+						else if (registrationStep === 'email') handleSendCode();
+						else if (registrationStep === 'code') handleVerifyCode();
+						else handleCompleteRegistration();
+					}}
+					disabled={isLoading}
+					className="w-full py-3 px-4 rounded-lg text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+					style={{ backgroundColor: '#ff6600' }}
+					onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#ff7722')}
+					onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#ff6600')}
+				>
+					{isLoading ? (
+						<>
+							<div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+							<span>Загрузка...</span>
+						</>
+					) : (
+						<>
+							{isLogin ? 'Войти' : 
+								registrationStep === 'email' ? 'Отправить код' :
+								registrationStep === 'code' ? 'Подтвердить' :
+								'Завершить регистрацию'}
+							<ChevronRight size={20} />
+						</>
+					)}
+				</button>
+
+				{/* Back button для регистрации */}
+				{!isLogin && registrationStep !== 'email' && (
+					<button
+						onClick={() => {
+							if (registrationStep === 'code') {
+								setRegistrationStep('email');
+								setCode('');
+							} else {
+								setRegistrationStep('code');
+								setPassword('');
+								setConfirmPassword('');
+							}
+							setErrorMessage(null);
+						}}
+						disabled={isLoading}
+						className="w-full mt-3 py-2 px-4 rounded-lg text-void-fg-2 bg-void-bg-3 hover:bg-void-bg-2 disabled:opacity-50 transition-colors text-sm"
+					>
+						← Назад
+					</button>
+				)}
+
+				{/* Toggle между входом и регистрацией */}
+				<div className="mt-6 pt-6 border-t border-void-border-2 text-center">
+					<div className="text-sm text-void-fg-3">
+						{isLogin ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}{' '}
+						<button
+							onClick={() => {
+								setIsLogin(!isLogin);
+								setRegistrationStep('email');
+								setCode('');
+								setPassword('');
+								setConfirmPassword('');
+								setErrorMessage(null);
+							}}
+							disabled={isLoading}
+							className="text-[#ff6600] hover:text-[#ff7722] disabled:opacity-50 font-medium transition-colors"
+						>
+							{isLogin ? 'Зарегистрироваться' : 'Войти'}
+						</button>
+					</div>
+				</div>
+			</div>
+
+			{/* Информация о тарифе */}
+			<div className="text-sm text-void-fg-3 text-center max-w-[400px] bg-void-bg-1/50 rounded-lg p-4 border border-void-border-2">
+				<div className="flex items-center justify-center gap-2 mb-1">
+					<Check size={16} className="text-[#ff6600]" />
+					<span className="font-medium text-void-fg-2">Бесплатный тариф</span>
+				</div>
+				<div>20 запросов в день после регистрации</div>
+			</div>
+		</div>
+	);
+};
+
 
 type WantToUseOption = 'smart' | 'private' | 'cheap' | 'all'
 
@@ -596,22 +943,29 @@ const VoidOnboardingContent = () => {
 		0: <OnboardingPageShell
 			content={
 				<div className='flex flex-col items-center gap-8'>
-					<div className="text-5xl font-light text-center">Welcome to Void</div>
+					<div className="text-6xl font-bold text-center">
+						Добро пожаловать в <span style={{ color: '#ff6600' }}>Искра</span>IDE
+					</div>
 
 					{/* Slice of Void image */}
 					<div className='max-w-md w-full h-[30vh] mx-auto flex items-center justify-center'>
 						{!isLinux && <VoidIcon />}
 					</div>
 
+					<div className="text-xl text-void-fg-2 text-center max-w-[600px]">
+						Мощный AI-ассистент для разработки
+					</div>
 
-					<FadeIn
-						delayMs={1000}
-					>
-						<PrimaryActionButton
+					<FadeIn delayMs={1000}>
+						<button
 							onClick={() => { setPageIndex(1) }}
+							className="px-6 py-3 rounded-lg text-white text-lg font-medium transition-all flex items-center gap-2"
+							style={{ backgroundColor: '#ff6600' }}
+							onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ff7722'}
+							onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ff6600'}
 						>
-							Get Started
-						</PrimaryActionButton>
+							Далее <ChevronRight size={20} />
+						</button>
 					</FadeIn>
 
 				</div>
@@ -620,24 +974,96 @@ const VoidOnboardingContent = () => {
 
 		1: <OnboardingPageShell hasMaxWidth={false}
 			content={
-				<AddProvidersPage pageIndex={pageIndex} setPageIndex={setPageIndex} />
+				<IskraAuthPage pageIndex={pageIndex} setPageIndex={setPageIndex} />
 			}
 		/>,
 		2: <OnboardingPageShell
-
 			content={
-				<div>
-					<div className="text-5xl font-light text-center">Settings and Themes</div>
-
-					<div className="mt-8 text-center flex flex-col items-center gap-4 w-full max-w-md mx-auto">
-						<h4 className="text-void-fg-3 mb-4">Transfer your settings from an existing editor?</h4>
-						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="VS Code" />
-						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="Cursor" />
-						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="Windsurf" />
+				<div className="flex flex-col items-center gap-8 w-full max-w-[800px]">
+					<div className="text-5xl font-bold text-center mb-2">
+						Почему <span style={{ color: '#ff6600' }}>Искра</span>IDE?
 					</div>
+					
+					<div className="text-lg text-void-fg-3 text-center max-w-[600px] mb-4">
+						Полнофункциональная AI-среда разработки с топовыми моделями
+					</div>
+
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-4">
+						{/* Топовые модели */}
+						<div className="bg-void-bg-1 p-6 rounded-xl border-2 border-void-border-2 hover:border-[#ff6600]/50 transition-all">
+							<div className="flex items-start gap-4">
+								<div className="text-[#ff6600] mt-1 flex-shrink-0">
+									<Brain size={28} />
+								</div>
+								<div>
+									<div className="text-xl font-semibold mb-2">Топовые AI модели</div>
+									<div className="text-sm text-void-fg-3 leading-relaxed">
+										Claude 4.5 Sonnet и Qwen 3 Coder — самые мощные модели для разработки
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{/* Оплата российскими картами */}
+						<div className="bg-void-bg-1 p-6 rounded-xl border-2 border-void-border-2 hover:border-[#ff6600]/50 transition-all">
+							<div className="flex items-start gap-4">
+								<div className="text-[#ff6600] mt-1 flex-shrink-0">
+									<DollarSign size={28} />
+								</div>
+								<div>
+									<div className="text-xl font-semibold mb-2">Российские карты</div>
+									<div className="text-sm text-void-fg-3 leading-relaxed">
+										Оплата картами МИР, Visa и Mastercard российских банков через ЮKassa
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{/* Работа без VPN */}
+						<div className="bg-void-bg-1 p-6 rounded-xl border-2 border-void-border-2 hover:border-[#ff6600]/50 transition-all">
+							<div className="flex items-start gap-4">
+								<div className="text-[#ff6600] mt-1 flex-shrink-0">
+									<Lock size={28} />
+								</div>
+								<div>
+									<div className="text-xl font-semibold mb-2">Без VPN</div>
+									<div className="text-sm text-void-fg-3 leading-relaxed">
+										Работает напрямую из России без необходимости использования VPN или прокси
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{/* Агентный режим */}
+						<div className="bg-void-bg-1 p-6 rounded-xl border-2 border-void-border-2 hover:border-[#ff6600]/50 transition-all">
+							<div className="flex items-start gap-4">
+								<div className="text-[#ff6600] mt-1 flex-shrink-0">
+									<Check size={28} />
+								</div>
+								<div>
+									<div className="text-xl font-semibold mb-2">Полностью агентная IDE</div>
+									<div className="text-sm text-void-fg-3 leading-relaxed">
+										AI-агент с доступом к файлам, терминалу и инструментам — пишет код самостоятельно
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<button
+						onClick={() => {
+							voidSettingsService.setGlobalSetting('isOnboardingComplete', true);
+							voidMetricsService.capture('Completed Onboarding', { selectedProviderName: 'iskra', wantToUseOption: 'iskra' })
+						}}
+						className="mt-8 px-6 py-3 rounded-lg text-white text-lg font-medium transition-all flex items-center gap-2"
+						style={{ backgroundColor: '#ff6600' }}
+						onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ff7722'}
+						onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ff6600'}
+					>
+						Начать <ChevronRight size={20} />
+					</button>
 				</div>
 			}
-			bottom={lastPagePrevAndNextButtons}
 		/>,
 	}
 

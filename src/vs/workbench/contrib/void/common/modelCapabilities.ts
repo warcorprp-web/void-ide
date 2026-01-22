@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------------------
  *  Copyright 2025 Glass Devtools, Inc. All rights reserved.
- *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
+ *  Licensed under th e Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
 import { FeatureName, ModelSelectionOptions, OverridesOfModel, ProviderName } from './voidSettingsTypes.js';
@@ -65,6 +65,12 @@ export const defaultProviderSettings = {
 		region: 'us-east-1', // add region setting
 		endpoint: '', // optionally allow overriding default
 	},
+	ceillerClaude: {
+		apiKey: '', // Токен берется из IskraApiService после авторизации
+	},
+	ceillerQwen: {
+		apiKey: '', // Токен берется из IskraApiService после авторизации
+	},
 
 } as const
 
@@ -90,6 +96,17 @@ export const defaultModelsOfProvider = {
 		'claude-3-5-sonnet-latest',
 		'claude-3-5-haiku-latest',
 		'claude-3-opus-latest',
+	],
+	ceillerClaude: [
+		'claude-haiku-4-5',
+		'claude-sonnet-4-5',
+		'claude-sonnet-4-5-20250929',
+		'claude-sonnet-4-20250514',
+		'claude-3-7-sonnet-20250219',
+	],
+	ceillerQwen: [
+		'qwen3-coder-plus',
+		'qwen3-coder-flash',
 	],
 	xAI: [ // https://docs.x.ai/docs/models?cluster=us-east-1
 		'grok-2',
@@ -1134,6 +1151,146 @@ const awsBedrockSettings: VoidStaticProviderInfo = {
 }
 
 
+// ---------------- CEILLER CLAUDE ----------------
+const ceillerClaudeModelOptions = {
+	'claude-haiku-4-5': {
+		contextWindow: 200_000,
+		reservedOutputTokenSpace: 8_192,
+		cost: { input: 0, output: 0 },
+		downloadable: false,
+		supportsFIM: false,
+		specialToolFormat: 'openai-style',
+		supportsSystemMessage: 'system-role',
+		reasoningCapabilities: false,
+	},
+	'claude-sonnet-4-5': {
+		contextWindow: 200_000,
+		reservedOutputTokenSpace: 8_192,
+		cost: { input: 0, output: 0 },
+		downloadable: false,
+		supportsFIM: false,
+		specialToolFormat: 'openai-style',
+		supportsSystemMessage: 'system-role',
+		reasoningCapabilities: {
+			supportsReasoning: true,
+			canTurnOffReasoning: true,
+			canIOReasoning: true,
+			openSourceThinkTags: ['<think>', '</think>'],
+		},
+	},
+	'claude-sonnet-4-5-20250929': {
+		contextWindow: 200_000,
+		reservedOutputTokenSpace: 8_192,
+		cost: { input: 0, output: 0 },
+		downloadable: false,
+		supportsFIM: false,
+		specialToolFormat: 'openai-style',
+		supportsSystemMessage: 'system-role',
+		reasoningCapabilities: {
+			supportsReasoning: true,
+			canTurnOffReasoning: true,
+			canIOReasoning: true,
+			openSourceThinkTags: ['<think>', '</think>'],
+		},
+	},
+	'claude-sonnet-4-20250514': {
+		contextWindow: 200_000,
+		reservedOutputTokenSpace: 8_192,
+		cost: { input: 0, output: 0 },
+		downloadable: false,
+		supportsFIM: false,
+		specialToolFormat: 'openai-style',
+		supportsSystemMessage: 'system-role',
+		reasoningCapabilities: {
+			supportsReasoning: true,
+			canTurnOffReasoning: true,
+			canIOReasoning: true,
+			openSourceThinkTags: ['<think>', '</think>'],
+		},
+	},
+	'claude-3-7-sonnet-20250219': {
+		contextWindow: 200_000,
+		reservedOutputTokenSpace: 8_192,
+		cost: { input: 0, output: 0 },
+		downloadable: false,
+		supportsFIM: false,
+		specialToolFormat: 'openai-style',
+		supportsSystemMessage: 'system-role',
+		reasoningCapabilities: {
+			supportsReasoning: true,
+			canTurnOffReasoning: true,
+			canIOReasoning: true,
+			openSourceThinkTags: ['<think>', '</think>'],
+		},
+	},
+} as const satisfies { [s: string]: VoidStaticModelInfo }
+
+const ceillerClaudeSettings: VoidStaticProviderInfo = {
+	modelOptions: ceillerClaudeModelOptions,
+	modelOptionsFallback: (modelName) => {
+		const lower = modelName.toLowerCase()
+		let fallbackName: keyof typeof ceillerClaudeModelOptions | null = null
+		if (lower.includes('claude-4-sonnet') || lower.includes('claude-sonnet-4')) fallbackName = 'claude-sonnet-4-5'
+		if (lower.includes('claude-3-7-sonnet')) fallbackName = 'claude-3-7-sonnet-20250219'
+		if (lower.includes('claude-haiku')) fallbackName = 'claude-haiku-4-5'
+		if (fallbackName) return { modelName: fallbackName, recognizedModelName: fallbackName, ...ceillerClaudeModelOptions[fallbackName] }
+		return null
+	},
+	providerReasoningIOSettings: {
+		// Искра API использует OpenAI-совместимый формат, но reasoning может не поддерживаться
+		// Если API поддерживает reasoning, нужно использовать OpenAI формат
+		input: { includeInPayload: openAICompatIncludeInPayloadReasoning },
+		output: { needsManualParse: true }, // Парсим теги <think> вручную
+	},
+}
+
+
+// ---------------- CEILLER QWEN ----------------
+const ceillerQwenModelOptions = {
+	'qwen3-coder-plus': {
+		contextWindow: 32_768,
+		reservedOutputTokenSpace: 8_192,
+		cost: { input: 0, output: 0 },
+		downloadable: false,
+		supportsFIM: false,
+		specialToolFormat: 'openai-style',
+		supportsSystemMessage: 'system-role',
+		reasoningCapabilities: {
+			supportsReasoning: true,
+			canTurnOffReasoning: true,
+			canIOReasoning: true,
+			openSourceThinkTags: ['<think>', '</think>'],
+		},
+	},
+	'qwen3-coder-flash': {
+		contextWindow: 32_768,
+		reservedOutputTokenSpace: 8_192,
+		cost: { input: 0, output: 0 },
+		downloadable: false,
+		supportsFIM: false,
+		specialToolFormat: 'openai-style',
+		supportsSystemMessage: 'system-role',
+		reasoningCapabilities: false,
+	},
+} as const satisfies { [s: string]: VoidStaticModelInfo }
+
+const ceillerQwenSettings: VoidStaticProviderInfo = {
+	modelOptions: ceillerQwenModelOptions,
+	modelOptionsFallback: (modelName) => {
+		const lower = modelName.toLowerCase()
+		let fallbackName: keyof typeof ceillerQwenModelOptions | null = null
+		if (lower.includes('qwen3-coder-plus')) fallbackName = 'qwen3-coder-plus'
+		if (lower.includes('qwen3-coder-flash')) fallbackName = 'qwen3-coder-flash'
+		if (fallbackName) return { modelName: fallbackName, recognizedModelName: fallbackName, ...ceillerQwenModelOptions[fallbackName] }
+		return null
+	},
+	providerReasoningIOSettings: {
+		input: { includeInPayload: openAICompatIncludeInPayloadReasoning },
+		output: { needsManualParse: true },
+	},
+}
+
+
 // ---------------- VLLM, OLLAMA, OPENAICOMPAT (self-hosted / local) ----------------
 const ollamaModelOptions = {
 	'qwen2.5-coder:7b': {
@@ -1474,6 +1631,10 @@ const modelSettingsOfProvider: { [providerName in ProviderName]: VoidStaticProvi
 	googleVertex: googleVertexSettings,
 	microsoftAzure: microsoftAzureSettings,
 	awsBedrock: awsBedrockSettings,
+	
+	// custom ceiller endpoints
+	ceillerClaude: ceillerClaudeSettings,
+	ceillerQwen: ceillerQwenSettings,
 } as const
 
 

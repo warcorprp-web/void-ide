@@ -1,0 +1,27 @@
+ИСПРАВЛЕНИЕ: Отключить streaming для запросов с tools
+
+Проблема: В streaming формате tool_calls не передаются корректно
+
+Решение: Отключить streaming когда есть tools
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди где создается options (строка ~380):
+
+	const options: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+		model: modelName,
+		messages: messages as any,
+		stream: true,
+		...nativeToolsObj,
+		...additionalOpenAIPayload
+	}
+
+ПОСЛЕ этого добавь:
+
+	// Отключаем streaming если есть tools (streaming не поддерживает tool_calls корректно)
+	if (nativeToolsObj.tools && nativeToolsObj.tools.length > 0) {
+		options.stream = false;
+		console.log('[Iskra] Disabled streaming for tools');
+	}
+
+

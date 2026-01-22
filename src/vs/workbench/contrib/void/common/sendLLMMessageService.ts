@@ -118,12 +118,68 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 
 		const { settingsOfProvider, } = this.voidSettingsService.state
 
+		// Подготавливаем данные авторизации Искра
+		let iskraAuth: { token: string; userData: any } | undefined = undefined;
+		
+		if (modelSelection.providerName === 'ceillerClaude' || modelSelection.providerName === 'ceillerQwen') {
+			const token = typeof localStorage !== 'undefined' ? localStorage.getItem('iskra.auth.token') : null;
+			const userJson = typeof localStorage !== 'undefined' ? localStorage.getItem('iskra.auth.user') : null;
+			
+			if (!token) {
+				const message = 'Требуется авторизация в Искра. Откройте настройки и войдите в систему.';
+				onError({ message, fullError: null });
+				return null;
+			}
+			
+			// Передаем через отдельное поле
+			iskraAuth = {
+				token,
+				userData: userJson ? JSON.parse(userJson) : null
+			};
+		}
+
 		const mcpTools = this.mcpService.getMCPTools()
 
 		// add state for request id
 		const requestId = generateUuid();
 		this.llmMessageHooks.onText[requestId] = onText
-		this.llmMessageHooks.onFinalMessage[requestId] = onFinalMessage
+		
+		// Оборачиваем onFinalMessage для обновления статистики Искра
+		this.llmMessageHooks.onFinalMessage[requestId] = async (params) => {
+			// Обновляем статистику для Искра провайдеров после успешного запроса
+			if ((modelSelection.providerName === 'ceillerClaude' || modelSelection.providerName === 'ceillerQwen') && iskraAuth?.token) {
+				try {
+					const response = await fetch('https://cli.cryptocatslab.ru/auth/me', {
+						method: 'GET',
+						headers: {
+							'Authorization': `Bearer ${iskraAuth.token}`,
+							'Content-Type': 'application/json'
+						}
+					});
+
+					if (response.ok) {
+						const data = await response.json();
+						
+						// Обновляем данные пользователя в localStorage
+						const updatedUser = {
+							...iskraAuth.userData,
+							...data.user,
+							requestsUsed: data.usage?.requestsToday || 0,
+							requestsTotal: data.usage?.limit || 20
+						};
+						
+						localStorage.setItem('iskra.auth.user', JSON.stringify(updatedUser));
+					}
+				} catch (e) {
+					// Игнорируем ошибки обновления статистики
+					console.warn('[LLMMessageService] Failed to update Iskra statistics:', e);
+				}
+			}
+			
+			// Вызываем оригинальный callback
+			onFinalMessage(params);
+		};
+		
 		this.llmMessageHooks.onError[requestId] = onError
 		this.llmMessageHooks.onAbort[requestId] = onAbort // used internally only
 
@@ -134,6 +190,7 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 			settingsOfProvider,
 			modelSelection,
 			mcpTools,
+			iskraAuth, // Передаем данные авторизации отдельно
 		} satisfies MainSendLLMMessageParams);
 
 		return requestId

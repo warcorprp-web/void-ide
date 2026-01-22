@@ -1,0 +1,26 @@
+ИСПРАВЛЕНИЕ URL (правильная версия)
+
+Наш API работает БЕЗ /v1!
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди строки ~217 и ~231:
+
+	baseURL: 'https://cli.cryptocatslab.ru/ai/v1',  // ❌ НЕПРАВИЛЬНО
+
+Замени на:
+
+	baseURL: 'https://cli.cryptocatslab.ru/ai',  // ✅ ПРАВИЛЬНО
+
+OpenAI SDK сам добавит /chat/completions, получится:
+https://cli.cryptocatslab.ru/ai/chat/completions ✅
+
+Исправь ДВА раза:
+1. Для ceillerQwen
+2. Для ceillerClaude
+
+Сохрани, пересобери:
+cd C:\void\void
+npm run compile
+
+Перезапусти Void!

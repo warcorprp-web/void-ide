@@ -1,0 +1,45 @@
+	
+					// Вызываем onFinalMessage для завершения и выполнения tool
+					const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId);
+					const toolCallObj = toolCall ? { toolCall } : {};
+					console.log('[Iskra] Calling onFinalMessage with toolCall:', !!toolCall);
+					onFinalMessage({ 
+						fullText: fullTextSoFar, 
+						fullReasoning: fullReasoningSoFar, 
+						anthropicReasoning: null, 
+						...toolCallObj 
+					});
+					return; // Выходим, чтобы не вызвать onFinalMessage дважды
+				}
+			} else {
+				// Обработка streaming ответа (оригинальный код)
+				for await (const chunk of response) {
+					// message
+					const newText = chunk.choices[0]?.delta?.content ?? ''
+					fullTextSoFar += newText
+
+					// tool call
+					for (const tool of chunk.choices[0]?.delta?.tool_calls ?? []) {
+						const index = tool.index
+						if (index !== 0) continue
+
+						toolName += tool.function?.name ?? ''
+						toolParamsStr += tool.function?.arguments ?? '';
+						toolId += tool.id ?? ''
+					}
+
+
+					// reasoning
+					let newReasoning = ''
+					if (nameOfReasoningFieldInDelta) {
+						// @ts-ignore
+						newReasoning = (chunk.choices[0]?.delta?.[nameOfReasoningFieldInDelta] || '') + ''
+						fullReasoningSoFar += newReasoning
+					}
+
+					// call onText
+					onText({
+						fullText: fullTextSoFar,
+						fullReasoning: fullReasoningSoFar,
+						toolCall: !toolName ? undefined : { name: toolName, rawParams: {}, isDone: false, doneParams: [], id: toolId },
+					})

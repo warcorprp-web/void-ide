@@ -32,16 +32,16 @@ const isFalsy = (u: unknown) => {
 }
 
 const validateStr = (argName: string, value: unknown) => {
-	if (value === null) throw new Error(`Invalid LLM output: ${argName} was null.`)
-	if (typeof value !== 'string') throw new Error(`Invalid LLM output format: ${argName} must be a string, but its type is "${typeof value}". Full value: ${JSON.stringify(value)}.`)
+	if (value === null) throw new Error(`Неверный вывод LLM: ${argName} был null.`)
+	if (typeof value !== 'string') throw new Error(`Неверный формат вывода LLM: ${argName} должен быть строкой, но его тип "${typeof value}". Полное значение: ${JSON.stringify(value)}.`)
 	return value
 }
 
 
 // We are NOT checking to make sure in workspace
 const validateURI = (uriStr: unknown) => {
-	if (uriStr === null) throw new Error(`Invalid LLM output: uri was null.`)
-	if (typeof uriStr !== 'string') throw new Error(`Invalid LLM output format: Provided uri must be a string, but it's a(n) ${typeof uriStr}. Full value: ${JSON.stringify(uriStr)}.`)
+	if (uriStr === null) throw new Error(`Неверный вывод LLM: uri был null.`)
+	if (typeof uriStr !== 'string') throw new Error(`Неверный формат вывода LLM: Указанный uri должен быть строкой, но это ${typeof uriStr}. Полное значение: ${JSON.stringify(uriStr)}.`)
 
 	// Check if it's already a full URI with scheme (e.g., vscode-remote://, file://, etc.)
 	// Look for :// pattern which indicates a scheme is present
@@ -57,7 +57,7 @@ const validateURI = (uriStr: unknown) => {
 			return uri
 		} catch (e) {
 			// If parsing fails, it's a malformed URI
-			throw new Error(`Invalid URI format: ${uriStr}. Error: ${e}`)
+			throw new Error(`Неверный формат URI: ${uriStr}. Ошибка: ${e}`)
 		}
 	} else {
 		// No scheme present, treat as file path
@@ -81,8 +81,8 @@ const validateOptionalStr = (argName: string, str: unknown) => {
 const validatePageNum = (pageNumberUnknown: unknown) => {
 	if (!pageNumberUnknown) return 1
 	const parsedInt = Number.parseInt(pageNumberUnknown + '')
-	if (!Number.isInteger(parsedInt)) throw new Error(`Page number was not an integer: "${pageNumberUnknown}".`)
-	if (parsedInt < 1) throw new Error(`Invalid LLM output format: Specified page number must be 1 or greater: "${pageNumberUnknown}".`)
+	if (!Number.isInteger(parsedInt)) throw new Error(`Номер страницы не является целым числом: "${pageNumberUnknown}".`)
+	if (parsedInt < 1) throw new Error(`Неверный формат вывода LLM: Указанный номер страницы должен быть 1 или больше: "${pageNumberUnknown}".`)
 	return parsedInt
 }
 
@@ -101,7 +101,7 @@ const validateNumber = (numStr: unknown, opts: { default: number | null }) => {
 }
 
 const validateProposedTerminalId = (terminalIdUnknown: unknown) => {
-	if (!terminalIdUnknown) throw new Error(`A value for terminalID must be specified, but the value was "${terminalIdUnknown}"`)
+	if (!terminalIdUnknown) throw new Error(`Необходимо указать значение для terminalID, но значение было "${terminalIdUnknown}"`)
 	const terminalId = terminalIdUnknown + ''
 	return terminalId
 }
@@ -297,7 +297,7 @@ export class ToolsService implements IToolsService {
 			read_file: async ({ uri, startLine, endLine, pageNumber }) => {
 				await voidModelService.initializeModel(uri)
 				const { model } = await voidModelService.getModelSafe(uri)
-				if (model === null) { throw new Error(`No contents; File does not exist.`) }
+				if (model === null) { throw new Error(`Нет содержимого; Файл не существует.`) }
 
 				let contents: string
 				if (startLine === null && endLine === null) {
@@ -372,7 +372,7 @@ export class ToolsService implements IToolsService {
 			search_in_file: async ({ uri, query, isRegex }) => {
 				await voidModelService.initializeModel(uri);
 				const { model } = await voidModelService.getModelSafe(uri);
-				if (model === null) { throw new Error(`No contents; File does not exist.`); }
+				if (model === null) { throw new Error(`Нет содержимого; Файл не существует.`); }
 				const contents = model.getValue(EndOfLinePreference.LF);
 				const contentOfLine = contents.split('\n');
 				const totalLines = contentOfLine.length;
@@ -413,7 +413,7 @@ export class ToolsService implements IToolsService {
 			rewrite_file: async ({ uri, newContent }) => {
 				await voidModelService.initializeModel(uri)
 				if (this.commandBarService.getStreamState(uri) === 'streaming') {
-					throw new Error(`Another LLM is currently making changes to this file. Please stop streaming for now and ask the user to resume later.`)
+					throw new Error(`Другая LLM в данный момент вносит изменения в этот файл. Пожалуйста, остановите потоковую передачу и попросите пользователя возобновить позже.`)
 				}
 				await editCodeService.callBeforeApplyOrEdit(uri)
 				editCodeService.instantlyRewriteFile({ uri, newContent })
@@ -429,7 +429,7 @@ export class ToolsService implements IToolsService {
 			edit_file: async ({ uri, searchReplaceBlocks }) => {
 				await voidModelService.initializeModel(uri)
 				if (this.commandBarService.getStreamState(uri) === 'streaming') {
-					throw new Error(`Another LLM is currently making changes to this file. Please stop streaming for now and ask the user to resume later.`)
+					throw new Error(`Другая LLM в данный момент вносит изменения в этот файл. Пожалуйста, остановите потоковую передачу и попросите пользователя возобновить позже.`)
 				}
 				await editCodeService.callBeforeApplyOrEdit(uri)
 				editCodeService.instantlyApplySearchReplaceBlocks({ uri, searchReplaceBlocks })
@@ -538,9 +538,9 @@ export class ToolsService implements IToolsService {
 				}
 				// normal command
 				if (resolveReason.type === 'timeout') {
-					return `${result_}\nTerminal command ran, but was automatically killed by Void after ${MAX_TERMINAL_INACTIVE_TIME}s of inactivity and did not finish successfully. To try with more time, open a persistent terminal and run the command there.`
+					return `${result_}\nКоманда терминала выполнялась, но была автоматически остановлена Void после ${MAX_TERMINAL_INACTIVE_TIME}с неактивности и не завершилась успешно. Чтобы попробовать с большим временем, откройте постоянный терминал и выполните команду там.`
 				}
-				throw new Error(`Unexpected internal error: Terminal command did not resolve with a valid reason.`)
+				throw new Error(`Неожиданная внутренняя ошибка: Команда терминала не завершилась с корректной причиной.`)
 			},
 
 			run_persistent_command: (params, result) => {
@@ -548,21 +548,21 @@ export class ToolsService implements IToolsService {
 				const { persistentTerminalId } = params
 				// success
 				if (resolveReason.type === 'done') {
-					return `${result_}\n(exit code ${resolveReason.exitCode})`
+					return `${result_}\n(код выхода ${resolveReason.exitCode})`
 				}
 				// bg command
 				if (resolveReason.type === 'timeout') {
-					return `${result_}\nTerminal command is running in terminal ${persistentTerminalId}. The given outputs are the results after ${MAX_TERMINAL_BG_COMMAND_TIME} seconds.`
+					return `${result_}\nКоманда терминала выполняется в терминале ${persistentTerminalId}. Данные выводы являются результатами после ${MAX_TERMINAL_BG_COMMAND_TIME} секунд.`
 				}
-				throw new Error(`Unexpected internal error: Terminal command did not resolve with a valid reason.`)
+				throw new Error(`Неожиданная внутренняя ошибка: Команда терминала не завершилась с корректной причиной.`)
 			},
 
 			open_persistent_terminal: (_params, result) => {
 				const { persistentTerminalId } = result;
-				return `Successfully created persistent terminal. persistentTerminalId="${persistentTerminalId}"`;
+				return `Успешно создан постоянный терминал. persistentTerminalId="${persistentTerminalId}"`;
 			},
 			kill_persistent_terminal: (params, _result) => {
-				return `Successfully closed terminal "${params.persistentTerminalId}".`;
+				return `Успешно закрыт терминал "${params.persistentTerminalId}".`;
 			},
 		}
 

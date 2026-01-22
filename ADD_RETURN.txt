@@ -1,0 +1,26 @@
+ДОБАВЬ RETURN после onFinalMessage
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди строку ~520:
+
+				onFinalMessage({ 
+					fullText: fullTextSoFar, 
+					fullReasoning: fullReasoningSoFar, 
+					anthropicReasoning: null, 
+					...toolCallObj 
+				});
+			}
+
+ЗАМЕНИ на:
+
+				onFinalMessage({ 
+					fullText: fullTextSoFar, 
+					fullReasoning: fullReasoningSoFar, 
+					anthropicReasoning: null, 
+					...toolCallObj 
+				});
+				return; // ✅ Выходим из функции
+			}
+
+Без return код продолжается и вызывает onFinalMessage второй раз на строке 568!

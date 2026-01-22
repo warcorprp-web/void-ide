@@ -1,0 +1,14 @@
+ПРОВЕРКА ЛОГОВ API
+
+1. Отправь запрос из Void: "создай файл test.py"
+
+2. Посмотри логи API:
+   pm2 logs iskra-api --lines 50
+
+3. Найди строки:
+   [API Debug] Received request: ...
+   [API Debug] First tool: ...
+
+4. Скинь мне эти строки
+
+Это покажет приходят ли tools на наш API!

@@ -1,0 +1,19 @@
+НУЖНО ПЕРЕСОБРАТЬ VOID!
+
+Логи показывают СТАРУЮ версию кода (нет строки "Calling onFinalMessage").
+
+Шаги:
+1. Открой PowerShell в C:\void\void
+2. Выполни: yarn watch (или yarn compile)
+3. Дождись окончания компиляции
+4. Закрой ВСЕ окна Void
+5. Запусти Void заново
+6. Попробуй снова попросить создать файл
+
+Или если используешь dev режим:
+1. Нажми Ctrl+Shift+P
+2. Выбери "Developer: Reload Window"
+3. Попробуй снова
+
+После пересборки в логах должно появиться:
+[Iskra] Calling onFinalMessage with toolCall: true

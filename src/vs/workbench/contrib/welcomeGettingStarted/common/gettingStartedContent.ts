@@ -100,8 +100,8 @@ type GettingStartedStartEntryContent = BuiltinGettingStartedStartEntry[];
 export const startEntries: GettingStartedStartEntryContent = [
 	{
 		id: 'welcome.showNewFileEntries',
-		title: localize('gettingStarted.newFile.title', "New File..."),
-		description: localize('gettingStarted.newFile.description', "Open a new untitled text file, notebook, or custom editor."),
+		title: localize('gettingStarted.newFile.title', "Новый файл..."),
+		description: localize('gettingStarted.newFile.description', "Создать новый текстовый файл, блокнот или редактор"),
 		icon: Codicon.newFile,
 		content: {
 			type: 'startEntry',
@@ -110,8 +110,8 @@ export const startEntries: GettingStartedStartEntryContent = [
 	},
 	{
 		id: 'topLevelOpenMac',
-		title: localize('gettingStarted.openMac.title', "Open..."),
-		description: localize('gettingStarted.openMac.description', "Open a file or folder to start working"),
+		title: localize('gettingStarted.openMac.title', "Открыть..."),
+		description: localize('gettingStarted.openMac.description', "Открыть файл или папку для начала работы"),
 		icon: Codicon.folderOpened,
 		when: '!isWeb && isMac',
 		content: {
@@ -121,8 +121,8 @@ export const startEntries: GettingStartedStartEntryContent = [
 	},
 	{
 		id: 'topLevelOpenFile',
-		title: localize('gettingStarted.openFile.title', "Open File..."),
-		description: localize('gettingStarted.openFile.description', "Open a file to start working"),
+		title: localize('gettingStarted.openFile.title', "Открыть файл..."),
+		description: localize('gettingStarted.openFile.description', "Открыть файл для начала работы"),
 		icon: Codicon.goToFile,
 		when: 'isWeb || !isMac',
 		content: {
@@ -132,8 +132,8 @@ export const startEntries: GettingStartedStartEntryContent = [
 	},
 	{
 		id: 'topLevelOpenFolder',
-		title: localize('gettingStarted.openFolder.title', "Open Folder..."),
-		description: localize('gettingStarted.openFolder.description', "Open a folder to start working"),
+		title: localize('gettingStarted.openFolder.title', "Открыть папку..."),
+		description: localize('gettingStarted.openFolder.description', "Открыть папку для начала работы"),
 		icon: Codicon.folderOpened,
 		when: '!isWeb && !isMac',
 		content: {
@@ -143,8 +143,8 @@ export const startEntries: GettingStartedStartEntryContent = [
 	},
 	{
 		id: 'topLevelOpenFolderWeb',
-		title: localize('gettingStarted.openFolder.title', "Open Folder..."),
-		description: localize('gettingStarted.openFolder.description', "Open a folder to start working"),
+		title: localize('gettingStarted.openFolder.title', "Открыть папку..."),
+		description: localize('gettingStarted.openFolder.description', "Открыть папку для начала работы"),
 		icon: Codicon.folderOpened,
 		when: '!openFolderWorkspaceSupport && workbenchState == \'workspace\'',
 		content: {
@@ -154,8 +154,8 @@ export const startEntries: GettingStartedStartEntryContent = [
 	},
 	{
 		id: 'topLevelGitClone',
-		title: localize('gettingStarted.topLevelGitClone.title', "Clone Git Repository..."),
-		description: localize('gettingStarted.topLevelGitClone.description', "Clone a remote repository to a local folder"),
+		title: localize('gettingStarted.topLevelGitClone.title', "Клонировать Git репозиторий..."),
+		description: localize('gettingStarted.topLevelGitClone.description', "Клонировать удаленный репозиторий в локальную папку"),
 		when: 'config.git.enabled && !git.missing',
 		icon: Codicon.sourceControl,
 		content: {
@@ -165,8 +165,8 @@ export const startEntries: GettingStartedStartEntryContent = [
 	},
 	{
 		id: 'topLevelGitOpen',
-		title: localize('gettingStarted.topLevelGitOpen.title', "Open Repository..."),
-		description: localize('gettingStarted.topLevelGitOpen.description', "Connect to a remote repository or pull request to browse, search, edit, and commit"),
+		title: localize('gettingStarted.topLevelGitOpen.title', "Открыть репозиторий..."),
+		description: localize('gettingStarted.topLevelGitOpen.description', "Подключиться к удаленному репозиторию для просмотра и редактирования"),
 		when: 'workspacePlatform == \'webworker\'',
 		icon: Codicon.sourceControl,
 		content: {
@@ -176,8 +176,8 @@ export const startEntries: GettingStartedStartEntryContent = [
 	},
 	{
 		id: 'topLevelShowWalkthroughs',
-		title: localize('gettingStarted.topLevelShowWalkthroughs.title', "Open a Walkthrough..."),
-		description: localize('gettingStarted.topLevelShowWalkthroughs.description', "View a walkthrough on the editor or an extension"),
+		title: localize('gettingStarted.topLevelShowWalkthroughs.title', "Открыть руководство..."),
+		description: localize('gettingStarted.topLevelShowWalkthroughs.description', "Просмотреть руководство по редактору или расширению"),
 		icon: Codicon.checklist,
 		when: 'allWalkthroughsHidden',
 		content: {
@@ -187,8 +187,8 @@ export const startEntries: GettingStartedStartEntryContent = [
 	},
 	{
 		id: 'topLevelRemoteOpen',
-		title: localize('gettingStarted.topLevelRemoteOpen.title', "Connect to..."),
-		description: localize('gettingStarted.topLevelRemoteOpen.description', "Connect to remote development workspaces."),
+		title: localize('gettingStarted.topLevelRemoteOpen.title', "Подключиться к..."),
+		description: localize('gettingStarted.topLevelRemoteOpen.description', "Подключиться к удаленным рабочим пространствам"),
 		when: '!isWeb',
 		icon: Codicon.remote,
 		content: {
@@ -236,12 +236,12 @@ function createCopilotSetupStep(id: string, button: string, when: string, includ
 export const walkthroughs: GettingStartedWalkthroughContent = [
 	{
 		id: 'Setup',
-		title: localize('gettingStarted.setup.title', "Get Started with VS Code"),
-		description: localize('gettingStarted.setup.description', "Customize your editor, learn the basics, and start coding"),
+		title: localize('gettingStarted.setup.title', "Начать работу с Искра IDE"),
+		description: localize('gettingStarted.setup.description', "Настройте редактор, изучите основы и начните программировать"),
 		isFeatured: true,
 		icon: setupIcon,
 		when: '!isWeb',
-		walkthroughPageTitle: localize('gettingStarted.setup.walkthroughPageTitle', 'Setup VS Code'),
+		walkthroughPageTitle: localize('gettingStarted.setup.walkthroughPageTitle', 'Настройка Искра IDE'),
 		next: 'Beginner',
 		content: {
 			type: 'steps',

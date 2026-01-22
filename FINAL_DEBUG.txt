@@ -1,0 +1,28 @@
+ФИНАЛЬНАЯ ОТЛАДКА - Проверка что передается в OpenAI SDK
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди строку где вызывается openai.chat.completions.create(options)
+
+ПЕРЕД этой строкой добавь:
+
+	// DEBUG: Что РЕАЛЬНО передается в SDK
+	console.log('[Iskra] Calling OpenAI SDK with options:', JSON.stringify({
+		model: options.model,
+		messages: options.messages?.length + ' messages',
+		tools: options.tools?.length + ' tools',
+		stream: options.stream
+	}));
+	console.log('[Iskra] First tool:', options.tools?.[0]);
+
+Это покажет:
+1. Передаются ли tools в SDK
+2. Какой формат у первого tool
+
+Пересобери, перезапусти, отправь запрос "создай файл test.py"
+
+Скинь логи - я точно скажу где проблема!
+
+---
+
+ВАЖНО: Наш API работает правильно! Проблема в том, что Void не передает tools в SDK.

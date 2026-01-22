@@ -869,7 +869,7 @@ export class GettingStartedPage extends EditorPane {
 
 		const header = $('.header', {},
 			$('h1.product-name.caption', {}, this.productService.nameLong),
-			$('p.subtitle.description', {}, localize({ key: 'gettingStarted.editingEvolved', comment: ['Shown as subtitle on the Welcome page.'] }, "Editing evolved"))
+			$('p.subtitle.description', {}, localize({ key: 'gettingStarted.editingEvolved', comment: ['Shown as subtitle on the Welcome page.'] }, "Искра разработки"))
 		);
 
 		const leftColumn = $('.categories-column.categories-column-left', {},);
@@ -1009,20 +1009,20 @@ export class GettingStartedPage extends EditorPane {
 
 		const recentlyOpenedList = this.recentlyOpenedList = new GettingStartedIndexList(
 			{
-				title: localize('recent', "Recent"),
+				title: localize('recent', "Недавние"),
 				klass: 'recently-opened',
 				limit: 5,
 				empty: $('.empty-recent', {},
-					localize('noRecents', "You have no recent folders,"),
-					$('button.button-link', { 'x-dispatch': 'openFolder' }, localize('openFolder', "open a folder")),
-					localize('toStart', "to start.")),
+					localize('noRecents', "У вас нет недавних папок,"),
+					$('button.button-link', { 'x-dispatch': 'openFolder' }, localize('openFolder', "открыть папку")),
+					localize('toStart', "чтобы начать.")),
 
 				more: $('.more', {},
 					$('button.button-link',
 						{
 							'x-dispatch': 'showMoreRecents',
-							title: localize('show more recents', "Show All Recent Folders {0}", this.getKeybindingLabel(OpenRecentAction.ID))
-						}, localize('showAll', "More..."))),
+							title: localize('show more recents', "Показать все недавние папки {0}", this.getKeybindingLabel(OpenRecentAction.ID))
+						}, localize('showAll', "Ещё..."))),
 				renderElement: renderRecent,
 				contextService: this.contextService
 			});
@@ -1060,7 +1060,7 @@ export class GettingStartedPage extends EditorPane {
 
 		const startList = this.startList = new GettingStartedIndexList(
 			{
-				title: localize('start', "Start"),
+				title: localize('start', "Начало"),
 				klass: 'start-container',
 				limit: 10,
 				renderElement: renderStartEntry,

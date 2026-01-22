@@ -1,0 +1,33 @@
+ИНСТРУКЦИЯ ПО ДОБАВЛЕНИЮ DEBUG КОДА
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди строку 370 (примерно):
+	const nativeToolsObj = potentialTools && specialToolFormat === 'openai-style' ?
+		{ tools: potentialTools } as const
+		: {}
+
+Добавь ПОСЛЕ НЕЁ:
+
+	// DEBUG: Проверка tools
+	console.log('[Iskra Debug] Tools check:', {
+		providerName,
+		modelName,
+		chatMode,
+		specialToolFormat,
+		hasPotentialTools: !!potentialTools,
+		potentialToolsCount: potentialTools?.length || 0,
+		hasNativeToolsObj: !!nativeToolsObj.tools,
+		nativeToolsCount: nativeToolsObj.tools?.length || 0,
+		toolNames: nativeToolsObj.tools?.map(t => t.function.name) || []
+	});
+
+Сохрани файл.
+
+Пересобери:
+cd C:\void\void
+npm run compile
+
+Запусти Void, открой Developer Tools (Help → Toggle Developer Tools)
+Отправь сообщение "Создай файл test.py"
+Посмотри в консоль что выведется.

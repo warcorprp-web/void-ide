@@ -141,7 +141,10 @@ export type SendLLMMessageParams = {
 
 // can't send functions across a proxy, use listeners instead
 export type BlockedMainLLMMessageParams = 'onText' | 'onFinalMessage' | 'onError' | 'abortRef'
-export type MainSendLLMMessageParams = Omit<SendLLMMessageParams, BlockedMainLLMMessageParams> & { requestId: string } & SendLLMType
+export type MainSendLLMMessageParams = Omit<SendLLMMessageParams, BlockedMainLLMMessageParams> & { 
+	requestId: string;
+	iskraAuth?: { token: string; userData: any }; // Данные авторизации Искра
+} & SendLLMType
 
 export type MainLLMMessageAbortParams = { requestId: string }
 

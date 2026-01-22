@@ -11,7 +11,7 @@ import { IStorageService, StorageScope, StorageTarget } from '../../../../platfo
 import { URI } from '../../../../base/common/uri.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
 import { ILLMMessageService } from '../common/sendLLMMessageService.js';
-import { chat_userMessageContent, isABuiltinToolName } from '../common/prompt/prompts.js';
+import { chat_userMessageContent, isABuiltinToolName, builtinTools } from '../common/prompt/prompts.js';
 import { AnthropicReasoning, getErrorMessage, RawToolCallObj, RawToolParamsObj } from '../common/sendLLMMessageTypes.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
 import { FeatureName, ModelSelection, ModelSelectionOptions } from '../common/voidSettingsTypes.js';
@@ -618,6 +618,21 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 		// Check if it's a built-in tool
 		const isBuiltInTool = isABuiltinToolName(toolName)
 
+		// Check if tool exists at all
+		if (!isBuiltInTool) {
+			const mcpTools = this._mcpService.getMCPTools()
+			const mcpTool = mcpTools?.find(t => t.name === toolName)
+			if (!mcpTool) {
+				// Tool doesn't exist - provide helpful error
+				const availableToolNames = [
+					...Object.keys(builtinTools),
+					...(mcpTools?.map(t => t.name) ?? [])
+				]
+				const errorMessage = `Ошибка: Инструмент "${toolName}" не существует.\n\nДоступные инструменты:\n${availableToolNames.map(n => `- ${n}`).join('\n')}\n\nПожалуйста, используйте один из доступных инструментов.`
+				this._addMessageToThread(threadId, { role: 'tool', type: 'invalid_params', rawParams: opts.unvalidatedToolParams, result: null, name: toolName, content: errorMessage, id: toolId, mcpServerName })
+				return {}
+			}
+		}
 
 		if (!opts.preapproved) { // skip this if pre-approved
 			// 1. validate tool params
@@ -684,7 +699,14 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 			else {
 				const mcpTools = this._mcpService.getMCPTools()
 				const mcpTool = mcpTools?.find(t => t.name === toolName)
-				if (!mcpTool) { throw new Error(`MCP tool ${toolName} not found`) }
+				if (!mcpTool) { 
+					// Provide helpful error message with available tools
+					const availableToolNames = [
+						...Object.keys(builtinTools),
+						...(mcpTools?.map(t => t.name) ?? [])
+					].join(', ')
+					throw new Error(`Tool "${toolName}" not found. Available tools: ${availableToolNames}`)
+				}
 
 				resolveInterruptor(() => { })
 

@@ -426,7 +426,9 @@ const systemToolsXMLPrompt = (chatMode: ChatMode, mcpTools: InternalToolInfo[] |
 
 
 export const chat_systemMessage = ({ workspaceFolders, openedURIs, activeURI, persistentTerminalIDs, directoryStr, chatMode: mode, mcpTools, includeXMLToolDefinitions }: { workspaceFolders: string[], directoryStr: string, openedURIs: string[], activeURI: string | undefined, persistentTerminalIDs: string[], chatMode: ChatMode, mcpTools: InternalToolInfo[] | undefined, includeXMLToolDefinitions: boolean }) => {
-	const header = (`You are an expert coding ${mode === 'agent' ? 'agent' : 'assistant'} whose job is \
+	const header = (`ВАЖНО: Всегда отвечай на русском языке. Все твои ответы, объяснения и комментарии должны быть на русском.
+
+You are an expert coding ${mode === 'agent' ? 'agent' : 'assistant'} whose job is \
 ${mode === 'agent' ? `to help the user develop, run, and make changes to their codebase.`
 			: mode === 'gather' ? `to search, understand, and reference files in the user's codebase.`
 				: mode === 'normal' ? `to assist the user with their coding tasks.`
@@ -460,6 +462,16 @@ ${directoryStr}
 
 
 	const toolDefinitions = includeXMLToolDefinitions ? systemToolsXMLPrompt(mode, mcpTools) : null
+	
+	// For native tool formats (OpenAI, Anthropic, Gemini), add basic instructions
+	const nativeToolInstructions = !includeXMLToolDefinitions && (mode === 'agent' || mode === 'gather') ? `\
+CRITICAL TOOL CALLING RULES:
+1. You have access to function calling tools provided in the tools parameter
+2. You MUST use ONLY the exact tool names from the tools array
+3. NEVER invent, guess, or hallucinate tool names that don't exist in the tools list
+4. If you call a non-existent tool, you will receive an error
+5. Each tool has specific parameters defined in its schema - follow them exactly
+6. When you need to perform an action, check the available tools and choose the appropriate one` : null
 
 	const details: string[] = []
 
@@ -517,6 +529,7 @@ ${details.map((d, i) => `${i + 1}. ${d}`).join('\n\n')}`)
 	ansStrs.push(header)
 	ansStrs.push(sysInfo)
 	if (toolDefinitions) ansStrs.push(toolDefinitions)
+	if (nativeToolInstructions) ansStrs.push(nativeToolInstructions)
 	ansStrs.push(importantDetails)
 	ansStrs.push(fsInfo)
 

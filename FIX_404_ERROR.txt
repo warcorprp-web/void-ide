@@ -1,0 +1,29 @@
+ИСПРАВЛЕНИЕ 404 ОШИБКИ
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди строки ~213 и ~227:
+
+	return new OpenAI({ 
+		baseURL: 'https://cli.cryptocatslab.ru/ai',  // ❌ НЕПРАВИЛЬНО
+		apiKey: userToken,
+		...commonPayloadOpts 
+	})
+
+Замени на:
+
+	return new OpenAI({ 
+		baseURL: 'https://cli.cryptocatslab.ru/ai/v1',  // ✅ ПРАВИЛЬНО
+		apiKey: userToken,
+		...commonPayloadOpts 
+	})
+
+Исправь ДВА раза:
+1. Для ceillerQwen (строка ~213)
+2. Для ceillerClaude (строка ~227)
+
+Сохрани, пересобери:
+cd C:\void\void
+npm run compile
+
+Перезапусти Void - 404 исчезнет!

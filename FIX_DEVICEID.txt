@@ -1,0 +1,36 @@
+ИСПРАВЛЕНИЕ: Правильная генерация deviceId
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\common\iskraApiService.ts
+
+Найди строку 307-309:
+
+	private generateDeviceId(): string {
+		return `device-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+	}
+
+ЗАМЕНИ на:
+
+	private async generateDeviceId(): Promise<string> {
+		try {
+			// Используем встроенную функцию VS Code для получения уникального ID устройства
+			const { getMachineId } = await import('vs/base/node/id');
+			const machineId = await getMachineId((err) => console.error('Device ID error:', err));
+			return machineId;
+		} catch (err) {
+			console.error('Failed to get machine ID:', err);
+			// Fallback на случайный ID (только если не удалось получить реальный)
+			return `device-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+		}
+	}
+
+Также найди строку 176:
+
+	const deviceId = this.storageService.get('iskra.deviceId', StorageScope.APPLICATION) || this.generateDeviceId();
+
+ЗАМЕНИ на:
+
+	const deviceId = this.storageService.get('iskra.deviceId', StorageScope.APPLICATION) || await this.generateDeviceId();
+
+И измени сигнатуру метода completeRegistration на async (если еще не async).
+
+После этого deviceId будет основан на реальном MAC адресе устройства!

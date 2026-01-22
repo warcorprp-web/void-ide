@@ -118,7 +118,7 @@ export const QuickEditChat = ({
 					})
 				}, [textAreaRef_, onX])}
 				fnsRef={textAreaFnsRef}
-				placeholder="Enter instructions..."
+				placeholder="Введите инструкции..."
 				onChangeText={useCallback((newStr: string) => {
 					setInstructionsAreEmpty(!newStr)
 					onChangeText_(newStr)

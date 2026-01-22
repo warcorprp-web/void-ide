@@ -1,0 +1,27 @@
+ДОБАВИТЬ max_tokens В ЗАПРОС
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди строку ~432:
+
+	const options: ... = {
+		model: modelName,
+		messages: messages as any,
+		stream: true,
+		...nativeToolsObj,
+		...additionalOpenAIPayload
+		// max_completion_tokens: maxTokens,
+	}
+
+РАСКОММЕНТИРУЙ последнюю строку:
+
+	const options: ... = {
+		model: modelName,
+		messages: messages as any,
+		stream: true,
+		...nativeToolsObj,
+		...additionalOpenAIPayload,
+		max_completion_tokens: 8192  // ✅ Лимит токенов для ответа
+	}
+
+Это ограничит длину ответа и предотвратит обрезание tool_calls.

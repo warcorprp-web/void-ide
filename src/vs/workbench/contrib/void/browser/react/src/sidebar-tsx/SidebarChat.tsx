@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------*/
 
 import React, { ButtonHTMLAttributes, FormEvent, FormHTMLAttributes, Fragment, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 import { useAccessor, useChatThreadsState, useChatThreadsStreamState, useSettingsState, useActiveURI, useCommandBarState, useFullChatThreadsStreamState } from '../util/services.js';
 import { ScrollType } from '../../../../../../../editor/common/editorCommon.js';
@@ -18,11 +18,12 @@ import { ModelDropdown, } from '../void-settings-tsx/ModelDropdown.js';
 import { PastThreadsList } from './SidebarThreadSelector.js';
 import { VOID_CTRL_L_ACTION_ID } from '../../../actionIDs.js';
 import { VOID_OPEN_SETTINGS_ACTION_ID } from '../../../voidSettingsPane.js';
+import { useFloating, autoUpdate, offset, flip, shift, size } from '@floating-ui/react-dom';
 import { ChatMode, displayInfoOfProviderName, FeatureName, isFeatureNameDisabled } from '../../../../../../../workbench/contrib/void/common/voidSettingsTypes.js';
 import { ICommandService } from '../../../../../../../platform/commands/common/commands.js';
 import { WarningBox } from '../void-settings-tsx/WarningBox.js';
 import { getModelCapabilities, getIsReasoningEnabledState } from '../../../../common/modelCapabilities.js';
-import { AlertTriangle, File, Ban, Check, ChevronRight, Dot, FileIcon, Pencil, Undo, Undo2, X, Flag, Copy as CopyIcon, Info, CirclePlus, Ellipsis, CircleEllipsis, Folder, ALargeSmall, TypeOutline, Text } from 'lucide-react';
+import { AlertTriangle, File, Ban, Check, ChevronRight, Dot, FileIcon, Pencil, Undo, Undo2, X, Flag, Copy as CopyIcon, Info, CirclePlus, Ellipsis, CircleEllipsis, Folder, ALargeSmall, TypeOutline, Text, Cpu } from 'lucide-react';
 import { ChatMessage, CheckpointEntry, StagingSelectionItem, ToolMessage } from '../../../../common/chatThreadServiceTypes.js';
 import { approvalTypeOfBuiltinToolName, BuiltinToolCallParams, BuiltinToolName, ToolName, LintErrorItem, ToolApprovalType, toolApprovalTypes } from '../../../../common/toolsServiceTypes.js';
 import { CopyButton, EditToolAcceptRejectButtonsHTML, IconShell1, JumpToFileButton, JumpToTerminalButton, StatusIndicator, StatusIndicatorForApplyButton, useApplyStreamState, useEditToolStreamState } from '../markdown/ApplyBlockHoverButtons.js';
@@ -121,30 +122,20 @@ export const IconWarning = ({ size, className = '' }: { size: number, className?
 
 
 export const IconLoading = ({ className = '' }: { className?: string }) => {
-
-	const [loadingText, setLoadingText] = useState('.');
-
-	useEffect(() => {
-		let intervalId;
-
-		// Function to handle the animation
-		const toggleLoadingText = () => {
-			if (loadingText === '...') {
-				setLoadingText('.');
-			} else {
-				setLoadingText(loadingText + '.');
-			}
-		};
-
-		// Start the animation loop
-		intervalId = setInterval(toggleLoadingText, 300);
-
-		// Cleanup function to clear the interval when component unmounts
-		return () => clearInterval(intervalId);
-	}, [loadingText, setLoadingText]);
-
-	return <div className={`${className}`}>{loadingText}</div>;
-
+	return (
+		<div className={`inline-flex items-center ${className}`}>
+			<DotLottieReact
+				src="https://lottie.host/14adbbe0-a2c3-4cf2-bb8e-0cd0734c8090/cfn4fAbldu.lottie"
+				loop
+				autoplay
+				style={{ 
+					width: '24px', 
+					height: '24px',
+					filter: 'brightness(0) saturate(100%) invert(55%) sepia(89%) saturate(2477%) hue-rotate(360deg) brightness(102%) contrast(101%)'
+				}}
+			/>
+		</div>
+	);
 }
 
 
@@ -169,16 +160,19 @@ const ReasoningOptionSlider = ({ featureName }: { featureName: FeatureName }) =>
 	const isReasoningEnabled = getIsReasoningEnabledState(featureName, providerName, modelName, modelSelectionOptions, overridesOfModel)
 
 	if (canTurnOffReasoning && !reasoningBudgetSlider) { // if it's just a on/off toggle without a power slider
-		return <div className='flex items-center gap-x-2'>
-			<span className='text-void-fg-3 text-xs pointer-events-none inline-block w-10 pr-1'>Thinking</span>
+		return <div className='flex items-center gap-x-3 py-1'>
+			<span className='text-void-fg-2 text-xs font-medium pointer-events-none inline-block min-w-[60px]'>Мышление</span>
 			<VoidSwitch
-				size='xxs'
+				size='xs'
 				value={isReasoningEnabled}
 				onChange={(newVal) => {
 					const isOff = canTurnOffReasoning && !newVal
 					voidSettingsService.setOptionsOfModelSelection(featureName, modelSelection.providerName, modelSelection.modelName, { reasoningEnabled: !isOff })
 				}}
 			/>
+			<span className='text-void-fg-3 text-xs pointer-events-none'>
+				{isReasoningEnabled ? <span className='text-[#ff6600] font-medium'>Включено</span> : <span className='opacity-60'>Отключено</span>}
+			</span>
 		</div>
 	}
 
@@ -193,11 +187,11 @@ const ReasoningOptionSlider = ({ featureName }: { featureName: FeatureName }) =>
 		const value = isReasoningEnabled ? voidSettingsState.optionsOfModelSelection[featureName][modelSelection.providerName]?.[modelSelection.modelName]?.reasoningBudget ?? defaultVal
 			: valueIfOff
 
-		return <div className='flex items-center gap-x-2'>
-			<span className='text-void-fg-3 text-xs pointer-events-none inline-block w-10 pr-1'>Thinking</span>
+		return <div className='flex items-center gap-x-3 py-1'>
+			<span className='text-void-fg-2 text-xs font-medium pointer-events-none inline-block min-w-[60px]'>Мышление</span>
 			<VoidSlider
-				width={50}
-				size='xs'
+				width={80}
+				size='sm'
 				min={min}
 				max={max}
 				step={stepSize}
@@ -207,7 +201,9 @@ const ReasoningOptionSlider = ({ featureName }: { featureName: FeatureName }) =>
 					voidSettingsService.setOptionsOfModelSelection(featureName, modelSelection.providerName, modelSelection.modelName, { reasoningEnabled: !isOff, reasoningBudget: newVal })
 				}}
 			/>
-			<span className='text-void-fg-3 text-xs pointer-events-none'>{isReasoningEnabled ? `${value} tokens` : 'Thinking disabled'}</span>
+			<span className='text-void-fg-3 text-xs pointer-events-none min-w-[100px]'>
+				{isReasoningEnabled ? <span className='text-[#ff6600] font-medium'>{value} токенов</span> : <span className='opacity-60'>Отключено</span>}
+			</span>
 		</div>
 	}
 
@@ -224,11 +220,11 @@ const ReasoningOptionSlider = ({ featureName }: { featureName: FeatureName }) =>
 
 		const currentEffortCapitalized = currentEffort.charAt(0).toUpperCase() + currentEffort.slice(1, Infinity)
 
-		return <div className='flex items-center gap-x-2'>
-			<span className='text-void-fg-3 text-xs pointer-events-none inline-block w-10 pr-1'>Thinking</span>
+		return <div className='flex items-center gap-x-3 py-1'>
+			<span className='text-void-fg-2 text-xs font-medium pointer-events-none inline-block min-w-[60px]'>Мышление</span>
 			<VoidSlider
-				width={30}
-				size='xs'
+				width={60}
+				size='sm'
 				min={min}
 				max={max}
 				step={1}
@@ -238,7 +234,9 @@ const ReasoningOptionSlider = ({ featureName }: { featureName: FeatureName }) =>
 					voidSettingsService.setOptionsOfModelSelection(featureName, modelSelection.providerName, modelSelection.modelName, { reasoningEnabled: !isOff, reasoningEffort: values[newVal] ?? undefined })
 				}}
 			/>
-			<span className='text-void-fg-3 text-xs pointer-events-none'>{isReasoningEnabled ? `${currentEffortCapitalized}` : 'Thinking disabled'}</span>
+			<span className='text-void-fg-3 text-xs pointer-events-none min-w-[80px]'>
+				{isReasoningEnabled ? <span className='text-[#ff6600] font-medium'>{currentEffortCapitalized}</span> : <span className='opacity-60'>Отключено</span>}
+			</span>
 		</div>
 	}
 
@@ -248,41 +246,150 @@ const ReasoningOptionSlider = ({ featureName }: { featureName: FeatureName }) =>
 
 
 const nameOfChatMode = {
-	'normal': 'Chat',
-	'gather': 'Gather',
-	'agent': 'Agent',
+	'normal': 'Чат',
+	'gather': 'Сбор',
+	'agent': 'Агент',
 }
 
 const detailOfChatMode = {
-	'normal': 'Normal chat',
-	'gather': 'Reads files, but can\'t edit',
-	'agent': 'Edits files and uses tools',
+	'normal': 'Обычный чат',
+	'gather': 'Читает файлы, но не редактирует',
+	'agent': 'Редактирует файлы и использует инструменты',
 }
 
+// Иконки для режимов
+const iconOfChatMode = {
+	'normal': <Text size={12} className="text-[#ff6600]" />,
+	'gather': <FileIcon size={12} className="text-[#ff6600]" />,
+	'agent': <Cpu size={12} className="text-[#ff6600]" />,
+}
 
 const ChatModeDropdown = ({ className }: { className: string }) => {
 	const accessor = useAccessor()
-
 	const voidSettingsService = accessor.get('IVoidSettingsService')
 	const settingsState = useSettingsState()
 
-	const options: ChatMode[] = useMemo(() => ['normal', 'gather', 'agent'], [])
+	const [isOpen, setIsOpen] = useState(false)
+	const options: ChatMode[] = useMemo(() => ['agent', 'normal', 'gather'], []) // Агент первый
 
 	const onChangeOption = useCallback((newVal: ChatMode) => {
 		voidSettingsService.setGlobalSetting('chatMode', newVal)
+		setIsOpen(false)
 	}, [voidSettingsService])
 
-	return <VoidCustomDropdownBox
-		className={className}
-		options={options}
-		selectedOption={settingsState.globalSettings.chatMode}
-		onChangeOption={onChangeOption}
-		getOptionDisplayName={(val) => nameOfChatMode[val]}
-		getOptionDropdownName={(val) => nameOfChatMode[val]}
-		getOptionDropdownDetail={(val) => detailOfChatMode[val]}
-		getOptionsEqual={(a, b) => a === b}
-	/>
+	const selectedOption = settingsState.globalSettings.chatMode
 
+	// Floating UI setup
+	const { x, y, strategy, refs } = useFloating({
+		open: isOpen,
+		onOpenChange: setIsOpen,
+		placement: 'bottom-start',
+		middleware: [
+			offset(4),
+			flip({ padding: 8 }),
+			shift({ padding: 8 }),
+			size({
+				apply({ availableHeight, elements }) {
+					Object.assign(elements.floating.style, {
+						maxHeight: `${Math.min(availableHeight - 8, 300)}px`,
+						overflowY: 'auto',
+					})
+				},
+				padding: 8,
+			}),
+		],
+		whileElementsMounted: autoUpdate,
+		strategy: 'fixed',
+	})
+
+	// Закрытие при клике вне компонента
+	useEffect(() => {
+		if (!isOpen) return
+		
+		const handleClickOutside = (event: MouseEvent) => {
+			const target = event.target as Node
+			const floating = refs.floating.current
+			const reference = refs.reference.current
+			
+			if (
+				floating &&
+				reference &&
+				!floating.contains(target) &&
+				!reference.contains(target)
+			) {
+				setIsOpen(false)
+			}
+		}
+		
+		document.addEventListener('mousedown', handleClickOutside)
+		return () => document.removeEventListener('mousedown', handleClickOutside)
+	}, [isOpen, refs.floating, refs.reference])
+
+	return (
+		<div className={`inline-block ${className}`}>
+			{/* Кнопка выбора - УЛУЧШЕННЫЙ ДИЗАЙН */}
+			<button
+				type="button"
+				ref={refs.setReference}
+				className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-void-bg-2 border border-void-border-2 hover:border-[#ff6600] hover:bg-void-bg-3 transition-all duration-200 shadow-sm hover:shadow-md"
+				onClick={() => setIsOpen(!isOpen)}
+			>
+				{iconOfChatMode[selectedOption]}
+				<span className="text-xs font-medium text-void-fg-1">{nameOfChatMode[selectedOption]}</span>
+				<svg
+					className={`w-3 h-3 transition-transform flex-shrink-0 text-void-fg-3 ${isOpen ? 'rotate-180' : ''}`}
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+				</svg>
+			</button>
+
+			{/* Выпадающий список */}
+			{isOpen && (
+				<div 
+					ref={refs.setFloating}
+					style={{
+						position: strategy,
+						top: y ?? 0,
+						left: x ?? 0,
+						minWidth: '280px',
+						zIndex: 999999,
+					}}
+					className="bg-void-bg-2 border border-void-border-2 rounded-lg shadow-xl"
+				>
+					{options.map((mode) => {
+						const isSelected = mode === selectedOption
+						
+						return (
+							<button
+								key={mode}
+								type="button"
+								className={`block w-full text-left px-3 py-2.5 first:rounded-t-lg last:rounded-b-lg hover:bg-void-bg-3 transition-all duration-150 ${
+									isSelected ? 'bg-void-bg-3 border-l-2 border-[#ff6600]' : ''
+								}`}
+								onClick={() => onChangeOption(mode)}
+							>
+								{/* Название режима */}
+								<div className="flex items-center gap-2 mb-1">
+									{iconOfChatMode[mode]}
+									<span className={`text-sm font-medium truncate ${isSelected ? 'text-[#ff6600]' : 'text-void-fg-1'}`}>
+										{nameOfChatMode[mode]}
+									</span>
+								</div>
+								
+								{/* Описание */}
+								<div className="text-xs text-void-fg-3 pl-5">
+									{detailOfChatMode[mode]}
+								</div>
+							</button>
+						)
+					})}
+				</div>
+			)}
+		</div>
+	)
 }
 
 
@@ -343,10 +450,11 @@ export const VoidChatArea: React.FC<VoidChatAreaProps> = ({
 			className={`
 				gap-x-1
                 flex flex-col p-2 relative input text-left shrink-0
-                rounded-md
+                rounded-lg
                 bg-void-bg-1
 				transition-all duration-200
-				border border-void-border-3 focus-within:border-void-border-1 hover:border-void-border-1
+				border border-void-border-2 focus-within:border-[#ff6600] hover:border-[#ff6600]
+				shadow-sm hover:shadow-md
 				max-h-[80vh] overflow-y-auto
                 ${className}
             `}
@@ -387,8 +495,8 @@ export const VoidChatArea: React.FC<VoidChatAreaProps> = ({
 						<ReasoningOptionSlider featureName={featureName} />
 
 						<div className='flex items-center flex-wrap gap-x-2 gap-y-1 text-nowrap '>
-							{featureName === 'Chat' && <ChatModeDropdown className='text-xs text-void-fg-3 bg-void-bg-1 border border-void-border-2 rounded py-0.5 px-1' />}
-							<ModelDropdown featureName={featureName} className='text-xs text-void-fg-3 bg-void-bg-1 rounded' />
+							{featureName === 'Chat' && <ChatModeDropdown className='' />}
+							<ModelDropdown featureName={featureName} className='' />
 						</div>
 					</div>
 				)}
@@ -724,7 +832,7 @@ export const SelectedFiles = (
 
 							{selection.type === 'File' && selection.state.wasAddedAsCurrentFile && messageIdx === undefined && currentURI?.fsPath === selection.uri.fsPath ?
 								<span className={`text-[8px] 'void-opacity-60 text-void-fg-4`}>
-									{`(Current File)`}
+									{`(Текущий файл)`}
 								</span>
 								: null
 							}
@@ -820,7 +928,7 @@ const ToolHeaderWrapper = ({
 	>{desc1}</span>
 
 	return (<div className=''>
-		<div className={`w-full border border-void-border-3 rounded px-2 py-1 bg-void-bg-3 overflow-hidden ${className}`}>
+		<div className={`w-full border-l-4 border-[#ff6600] rounded-lg px-3 py-2 bg-void-bg-2 overflow-hidden shadow-sm ${className}`}>
 			{/* header */}
 			<div className={`select-none flex items-center min-h-[24px]`}>
 				<div className={`flex items-center w-full gap-x-2 overflow-hidden justify-between ${isRejected ? 'line-through' : ''}`}>
@@ -866,14 +974,14 @@ const ToolHeaderWrapper = ({
 							className='text-void-warning opacity-90 flex-shrink-0'
 							size={14}
 							data-tooltip-id='void-tooltip'
-							data-tooltip-content={'Error running tool'}
+							data-tooltip-content={'Ошибка выполнения инструмента'}
 							data-tooltip-place='top'
 						/>}
 						{isRejected && <Ban
 							className='text-void-fg-4 opacity-90 flex-shrink-0'
 							size={14}
 							data-tooltip-id='void-tooltip'
-							data-tooltip-content={'Canceled'}
+							data-tooltip-content={'Отменено'}
 							data-tooltip-place='top'
 						/>}
 						{desc2 && <span className="text-void-fg-4 text-xs" onClick={desc2OnClick}>
@@ -881,7 +989,7 @@ const ToolHeaderWrapper = ({
 						</span>}
 						{numResults !== undefined && (
 							<span className="text-void-fg-4 text-xs ml-auto mr-1">
-								{`${numResults}${hasNextPage ? '+' : ''} result${numResults !== 1 ? 's' : ''}`}
+								{`${numResults}${hasNextPage ? '+' : ''} результат${numResults !== 1 ? 'ов' : ''}`}
 							</span>
 						)}
 					</div>
@@ -955,7 +1063,7 @@ const EditTool = ({ toolMessage, threadId, messageIdx, content }: Parameters<Res
 
 		if (toolMessage.type === 'success' || toolMessage.type === 'rejected') {
 			const { result } = toolMessage
-			componentParams.bottomChildren = <BottomChildren title='Lint errors'>
+			componentParams.bottomChildren = <BottomChildren title='Ошибки линтера'>
 				{result?.lintErrors?.map((error, i) => (
 					<div key={i} className='whitespace-nowrap'>Lines {error.startLineNumber}-{error.endLineNumber}: {error.message}</div>
 				))}
@@ -964,7 +1072,7 @@ const EditTool = ({ toolMessage, threadId, messageIdx, content }: Parameters<Res
 		else if (toolMessage.type === 'tool_error') {
 			// error
 			const { result } = toolMessage
-			componentParams.bottomChildren = <BottomChildren title='Error'>
+			componentParams.bottomChildren = <BottomChildren title='������'>
 				<CodeChildren>
 					{result}
 				</CodeChildren>
@@ -1070,13 +1178,13 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 	}, [chatMessage, mode, _justEnabledEdit, textAreaRefState, textAreaFnsRef.current, _justEnabledEdit.current, _mustInitialize.current])
 
 	const onOpenEdit = () => {
-		setIsBeingEdited(true)
-		chatThreadsService.setCurrentlyFocusedMessageIdx(messageIdx)
-		_justEnabledEdit.current = true
+		setIsBeingEdited(true);
+		chatThreadsService.setCurrentlyFocusedMessageIdx(messageIdx);
+		_justEnabledEdit.current = true;
 	}
 	const onCloseEdit = () => {
-		setIsFocused(false)
-		setIsHovered(false)
+		setIsFocused(false);
+		setIsHovered(false);
 		setIsBeingEdited(false)
 		chatThreadsService.setCurrentlyFocusedMessageIdx(undefined)
 
@@ -1153,7 +1261,7 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 				enableAtToMention
 				ref={setTextAreaRef}
 				className='min-h-[81px] max-h-[500px] px-0.5'
-				placeholder="Edit your message..."
+				placeholder="������������� ���������..."
 				onChangeText={(text) => setIsDisabled(!text)}
 				onFocus={() => {
 					setIsFocused(true)
@@ -1185,11 +1293,11 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 		onMouseLeave={() => setIsHovered(false)}
 	>
 		<div
-			// style chatbubble according to role
+			// style chatbubble according to role - ОРАНЖЕВЫЙ СТИЛЬ ДЛЯ ПОЛЬЗОВАТЕЛЯ
 			className={`
-            text-left rounded-lg max-w-full
+            text-left rounded-xl max-w-full
             ${mode === 'edit' ? ''
-					: mode === 'display' ? 'p-2 flex flex-col bg-void-bg-1 text-void-fg-1 overflow-x-auto cursor-pointer' : ''
+					: mode === 'display' ? 'p-3 flex flex-col bg-gradient-to-br from-[#ff6600] to-[#ff7722] text-white overflow-x-auto cursor-pointer shadow-md hover:shadow-lg transition-all duration-200' : ''
 				}
         `}
 			onClick={() => { if (mode === 'display') { onOpenEdit() } }}
@@ -1210,8 +1318,8 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 				className={`
                     cursor-pointer
                     p-[2px]
-                    bg-void-bg-1 border border-void-border-1 rounded-md
-                    transition-opacity duration-200 ease-in-out
+                    bg-[#ff6600] text-white border border-[#ff7722] rounded-md
+                    transition-all duration-200 ease-in-out hover:bg-[#ff7722]
                     ${isHovered || (isFocused && mode === 'edit') ? 'opacity-100' : 'opacity-0'}
                 `}
 				onClick={() => {
@@ -1340,6 +1448,9 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 	const isEmpty = !chatMessage.displayContent && !chatMessage.reasoning
 	if (isEmpty) return null
 
+	// Фильтруем теги <thinking_mode> из контента
+	const filteredContent = chatMessage.displayContent?.replace(/<thinking_mode>.*?<\/thinking_mode>/gi, '').trim() || ''
+
 	return <>
 		{/* reasoning token */}
 		{hasReasoning &&
@@ -1357,12 +1468,12 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 			</div>
 		}
 
-		{/* assistant message */}
-		{chatMessage.displayContent &&
+		{/* assistant message - БЕЗ ОБВОДКИ */}
+		{filteredContent &&
 			<div className={`${isCheckpointGhost ? 'opacity-50' : ''}`}>
 				<ProseWrapper>
 					<ChatMarkdownRender
-						string={chatMessage.displayContent || ''}
+						string={filteredContent}
 						chatMessageLocation={chatMessageLocation}
 						isApplyEnabled={true}
 						isLinkDetectionEnabled={true}
@@ -1381,7 +1492,7 @@ const ReasoningWrapper = ({ isDoneReasoning, isStreaming, children }: { isDoneRe
 	useEffect(() => {
 		if (!isWriting) setIsOpen(false) // if just finished reasoning, close
 	}, [isWriting])
-	return <ToolHeaderWrapper title='Reasoning' desc1={isWriting ? <IconLoading /> : ''} isOpen={isOpen} onClick={() => setIsOpen(v => !v)}>
+	return <ToolHeaderWrapper title='Размышление' desc1={isWriting ? <IconLoading /> : ''} isOpen={isOpen} onClick={() => setIsOpen(v => !v)}>
 		<ToolChildrenWrapper>
 			<div className='!select-text cursor-auto'>
 				{children}
@@ -1403,23 +1514,23 @@ const loadingTitleWrapper = (item: React.ReactNode): React.ReactNode => {
 }
 
 const titleOfBuiltinToolName = {
-	'read_file': { done: 'Read file', proposed: 'Read file', running: loadingTitleWrapper('Reading file') },
-	'ls_dir': { done: 'Inspected folder', proposed: 'Inspect folder', running: loadingTitleWrapper('Inspecting folder') },
-	'get_dir_tree': { done: 'Inspected folder tree', proposed: 'Inspect folder tree', running: loadingTitleWrapper('Inspecting folder tree') },
-	'search_pathnames_only': { done: 'Searched by file name', proposed: 'Search by file name', running: loadingTitleWrapper('Searching by file name') },
-	'search_for_files': { done: 'Searched', proposed: 'Search', running: loadingTitleWrapper('Searching') },
-	'create_file_or_folder': { done: `Created`, proposed: `Create`, running: loadingTitleWrapper(`Creating`) },
-	'delete_file_or_folder': { done: `Deleted`, proposed: `Delete`, running: loadingTitleWrapper(`Deleting`) },
-	'edit_file': { done: `Edited file`, proposed: 'Edit file', running: loadingTitleWrapper('Editing file') },
-	'rewrite_file': { done: `Wrote file`, proposed: 'Write file', running: loadingTitleWrapper('Writing file') },
-	'run_command': { done: `Ran terminal`, proposed: 'Run terminal', running: loadingTitleWrapper('Running terminal') },
-	'run_persistent_command': { done: `Ran terminal`, proposed: 'Run terminal', running: loadingTitleWrapper('Running terminal') },
+	'read_file': { done: 'Прочитан файл', proposed: 'Прочитать файл', running: loadingTitleWrapper('Чтение файла') },
+	'ls_dir': { done: 'Проверена папка', proposed: 'Проверить папку', running: loadingTitleWrapper('Проверка папки') },
+	'get_dir_tree': { done: 'Проверено дерево папок', proposed: 'Проверить дерево папок', running: loadingTitleWrapper('Проверка дерева папок') },
+	'search_pathnames_only': { done: 'Поиск по имени файла', proposed: 'Искать по имени файла', running: loadingTitleWrapper('Поиск по имени файла') },
+	'search_for_files': { done: 'Найдено', proposed: 'Искать', running: loadingTitleWrapper('Поиск') },
+	'create_file_or_folder': { done: `Создано`, proposed: `Создать`, running: loadingTitleWrapper(`Создание`) },
+	'delete_file_or_folder': { done: `Удалено`, proposed: `Удалить`, running: loadingTitleWrapper(`Удаление`) },
+	'edit_file': { done: `Отредактирован файл`, proposed: 'Редактировать файл', running: loadingTitleWrapper('Редактирование файла') },
+	'rewrite_file': { done: `Записан файл`, proposed: 'Записать файл', running: loadingTitleWrapper('Запись файла') },
+	'run_command': { done: `Запущен терминал`, proposed: 'Запустить терминал', running: loadingTitleWrapper('Запуск терминала') },
+	'run_persistent_command': { done: `Запущен терминал`, proposed: 'Запустить терминал', running: loadingTitleWrapper('Запуск терминала') },
 
-	'open_persistent_terminal': { done: `Opened terminal`, proposed: 'Open terminal', running: loadingTitleWrapper('Opening terminal') },
-	'kill_persistent_terminal': { done: `Killed terminal`, proposed: 'Kill terminal', running: loadingTitleWrapper('Killing terminal') },
+	'open_persistent_terminal': { done: `Открыт терминал`, proposed: 'Открыть терминал', running: loadingTitleWrapper('Открытие терминала') },
+	'kill_persistent_terminal': { done: `Закрыт терминал`, proposed: 'Закрыть терминал', running: loadingTitleWrapper('Закрытие терминала') },
 
-	'read_lint_errors': { done: `Read lint errors`, proposed: 'Read lint errors', running: loadingTitleWrapper('Reading lint errors') },
-	'search_in_file': { done: 'Searched in file', proposed: 'Search in file', running: loadingTitleWrapper('Searching in file') },
+	'read_lint_errors': { done: `Прочитаны ошибки линтера`, proposed: 'Прочитать ошибки линтера', running: loadingTitleWrapper('Чтение ошибок линтера') },
+	'search_in_file': { done: 'Поиск в файле', proposed: 'Искать в файле', running: loadingTitleWrapper('Поиск в файле') },
 } as const satisfies Record<BuiltinToolName, { done: any, proposed: any, running: any }>
 
 
@@ -1430,13 +1541,13 @@ const getTitle = (toolMessage: Pick<ChatMessage & { role: 'tool' }, 'name' | 'ty
 	if (!builtinToolNames.includes(t.name as BuiltinToolName)) {
 		// descriptor of Running or Ran etc
 		const descriptor =
-			t.type === 'success' ? 'Called'
-				: t.type === 'running_now' ? 'Calling'
-					: t.type === 'tool_request' ? 'Call'
-						: t.type === 'rejected' ? 'Call'
-							: t.type === 'invalid_params' ? 'Call'
-								: t.type === 'tool_error' ? 'Call'
-									: 'Call'
+			t.type === 'success' ? 'Вызвано'
+				: t.type === 'running_now' ? 'Вызов'
+					: t.type === 'tool_request' ? 'Вызвать'
+						: t.type === 'rejected' ? 'Вызвать'
+							: t.type === 'invalid_params' ? 'Вызвать'
+								: t.type === 'tool_error' ? 'Вызвать'
+									: 'Вызвать'
 
 
 		const title = `${descriptor} ${toolMessage.mcpServerName || 'MCP'}`
@@ -1605,7 +1716,7 @@ const ToolRequestAcceptRejectButtons = ({ toolName }: { toolName: ToolName }) =>
                 text-sm font-medium
             `}
 		>
-			Approve
+			Одобрить
 		</button>
 	)
 
@@ -1621,13 +1732,13 @@ const ToolRequestAcceptRejectButtons = ({ toolName }: { toolName: ToolName }) =>
                 text-sm font-medium
             `}
 		>
-			Cancel
+			Отменить
 		</button>
 	)
 
 	const approvalType = isABuiltinToolName(toolName) ? approvalTypeOfBuiltinToolName[toolName] : 'MCP tools'
 	const approvalToggle = approvalType ? <div key={approvalType} className="flex items-center ml-2 gap-x-1">
-		<ToolApprovalTypeSwitch size='xs' approvalType={approvalType} desc={`Auto-approve ${approvalType}`} />
+		<ToolApprovalTypeSwitch size='xs' approvalType={approvalType} desc={`Авто-одобрение ${approvalType}`} />
 	</div> : null
 
 	return <div className="flex gap-2 mx-0.5 items-center">
@@ -1733,7 +1844,7 @@ const EditToolHeaderButtons = ({ applyBoxId, uri, codeStr, toolName, threadId }:
 const InvalidTool = ({ toolName, message, mcpServerName }: { toolName: ToolName, message: string, mcpServerName: string | undefined }) => {
 	const accessor = useAccessor()
 	const title = getTitle({ name: toolName, type: 'invalid_params', mcpServerName })
-	const desc1 = 'Invalid parameters'
+	const desc1 = 'Неверные параметры'
 	const icon = null
 	const isError = true
 	const componentParams: ToolHeaderParams = { title, desc1, isError, icon }
@@ -1842,7 +1953,7 @@ const CommandTool = ({ toolMessage, type, threadId }: { threadId: string } & ({
 	}
 	else if (toolMessage.type === 'tool_error') {
 		const { result } = toolMessage
-		componentParams.bottomChildren = <BottomChildren title='Error'>
+		componentParams.bottomChildren = <BottomChildren title='������'>
 			<CodeChildren>
 				{result}
 			</CodeChildren>
@@ -1901,7 +2012,7 @@ const MCPToolWrapper = ({ toolMessage }: WrapperProps<string>) => {
 	}
 	else if (toolMessage.type === 'tool_error') {
 		const { result } = toolMessage
-		componentParams.bottomChildren = <BottomChildren title='Error'>
+		componentParams.bottomChildren = <BottomChildren title='������'>
 			<CodeChildren>
 				{result}
 			</CodeChildren>
@@ -1953,7 +2064,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
 				// JumpToFileButton removed in favor of FileLinkText
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2000,7 +2111,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			}
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2055,7 +2166,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			}
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2104,7 +2215,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			}
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2159,7 +2270,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			}
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2205,7 +2316,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			}
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage;
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2249,7 +2360,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
 				// JumpToFileButton removed in favor of FileLinkText
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2288,7 +2399,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
 				if (params) { componentParams.onClick = () => { voidOpenFileFn(params.uri, accessor) } }
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2330,7 +2441,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
 				if (params) { componentParams.onClick = () => { voidOpenFileFn(params.uri, accessor) } }
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2400,7 +2511,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			}
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2435,7 +2546,7 @@ const builtinToolNameToComponent: { [T in BuiltinToolName]: { resultWrapper: Res
 			}
 			else if (toolMessage.type === 'tool_error') {
 				const { result } = toolMessage
-				componentParams.bottomChildren = <BottomChildren title='Error'>
+				componentParams.bottomChildren = <BottomChildren title='������'>
 					<CodeChildren>
 						{result}
 					</CodeChildren>
@@ -2632,9 +2743,9 @@ const CommandBarInChat = () => {
 	// dark = Done
 
 	const threadStatus = (
-		chatThreadsStreamState?.isRunning === 'awaiting_user' ? { title: 'Needs Approval', color: 'yellow', } as const
-			: chatThreadsStreamState?.isRunning ? { title: 'Running', color: 'orange', } as const
-				: { title: 'Done', color: 'dark', } as const
+		chatThreadsStreamState?.isRunning === 'awaiting_user' ? { title: 'Требуется одобрение', color: 'yellow', } as const
+			: chatThreadsStreamState?.isRunning ? { title: 'Выполняется', color: 'orange', } as const
+				: { title: 'Готово', color: 'dark', } as const
 	)
 
 
@@ -2646,8 +2757,8 @@ const CommandBarInChat = () => {
 	// acceptall + rejectall
 	// popup info about each change (each with num changes + acceptall + rejectall of their own)
 
-	const numFilesChangedStr = numFilesChanged === 0 ? 'No files with changes'
-		: `${sortedCommandBarURIs.length} file${numFilesChanged === 1 ? '' : 's'} with changes`
+	const numFilesChangedStr = numFilesChanged === 0 ? 'Нет измененных файлов'
+		: `${sortedCommandBarURIs.length} файл${numFilesChanged === 1 ? '' : numFilesChanged < 5 ? 'а' : 'ов'} с изменениями`
 
 
 
@@ -2674,7 +2785,7 @@ const CommandBarInChat = () => {
 			}}
 			data-tooltip-id='void-tooltip'
 			data-tooltip-place='top'
-			data-tooltip-content='Reject all'
+			data-tooltip-content='Отклонить все'
 		/>
 
 		<IconShell1 // AcceptAllButtonWrapper
@@ -2693,7 +2804,7 @@ const CommandBarInChat = () => {
 			}}
 			data-tooltip-id='void-tooltip'
 			data-tooltip-place='top'
-			data-tooltip-content='Accept all'
+			data-tooltip-content='Принять все'
 		/>
 
 
@@ -2712,8 +2823,8 @@ const CommandBarInChat = () => {
 			const numDiffs = sortedDiffIds?.length || 0
 
 			const fileStatus = (isFinishedMakingFileChanges
-				? { title: 'Done', color: 'dark', } as const
-				: { title: 'Running', color: 'orange', } as const
+				? { title: 'Готово', color: 'dark', } as const
+				: { title: 'Выполняется', color: 'orange', } as const
 			)
 
 			const fileNameHTML = <div
@@ -2748,7 +2859,7 @@ const CommandBarInChat = () => {
 					onClick={() => { editCodeService.acceptOrRejectAllDiffAreas({ uri, removeCtrlKs: true, behavior: "reject", _addToHistory: true, }); }}
 					data-tooltip-id='void-tooltip'
 					data-tooltip-place='top'
-					data-tooltip-content='Reject file'
+					data-tooltip-content='Отклонить файл'
 
 				/>
 				<IconShell1 // AcceptAllButtonWrapper
@@ -2756,7 +2867,7 @@ const CommandBarInChat = () => {
 					onClick={() => { editCodeService.acceptOrRejectAllDiffAreas({ uri, removeCtrlKs: true, behavior: "accept", _addToHistory: true, }); }}
 					data-tooltip-id='void-tooltip'
 					data-tooltip-place='top'
-					data-tooltip-content='Accept file'
+					data-tooltip-content='Принять файл'
 				/>
 
 			</div>
@@ -3045,8 +3156,6 @@ export const SidebarChat = () => {
 					onDismiss={() => { chatThreadsService.dismissStreamError(currentThread.id) }}
 					showDismiss={true}
 				/>
-
-				<WarningBox className='text-sm my-2 mx-4' onClick={() => { commandService.executeCommand(VOID_OPEN_SETTINGS_ACTION_ID) }} text='Open settings' />
 			</div>
 		}
 	</ScrollToBottomContainer>
@@ -3078,7 +3187,7 @@ export const SidebarChat = () => {
 		<VoidInputBox2
 			enableAtToMention
 			className={`min-h-[81px] px-0.5 py-0.5`}
-			placeholder={`@ to mention, ${keybindingString ? `${keybindingString} to add a selection. ` : ''}Enter instructions...`}
+			placeholder={`@ для упоминания, ${keybindingString ? `${keybindingString} для добавления выделения. ` : ''}Введите инструкции...`}
 			onChangeText={onChangeText}
 			onKeyDown={onKeyDown}
 			onFocus={() => { chatThreadsService.setCurrentlyFocusedMessageIdx(undefined) }}
@@ -3095,9 +3204,9 @@ export const SidebarChat = () => {
 
 	const initiallySuggestedPromptsHTML = <div className='flex flex-col gap-2 w-full text-nowrap text-void-fg-3 select-none'>
 		{[
-			'Summarize my codebase',
-			'How do types work in Rust?',
-			'Create a .voidrules file for me'
+			'Суммируй мою кодовую базу',
+			'Как работают типы в Rust?',
+			'Создай файл .voidrules для меня'
 		].map((text, index) => (
 			<div
 				key={index}
@@ -3136,12 +3245,12 @@ export const SidebarChat = () => {
 
 		{Object.keys(chatThreadsState.allThreads).length > 1 ? // show if there are threads
 			<ErrorBoundary>
-				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Previous Threads</div>
+				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Предыдущие потоки</div>
 				<PastThreadsList />
 			</ErrorBoundary>
 			:
 			<ErrorBoundary>
-				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Suggestions</div>
+				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Предложения</div>
 				{initiallySuggestedPromptsHTML}
 			</ErrorBoundary>
 		}

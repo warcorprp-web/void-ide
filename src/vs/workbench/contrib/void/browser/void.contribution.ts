@@ -49,6 +49,11 @@ import './helperServices/consistentItemService.js'
 // register selection helper
 import './voidSelectionHelperWidget.js'
 
+// register Iskra URL handler (для обработки vscode://iskra-ai/payment-success)
+import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
+import { IskraUrlHandler } from './iskraUrlHandler.js';
+registerWorkbenchContribution2('iskraUrlHandler', IskraUrlHandler, WorkbenchPhase.BlockRestore);
+
 // register tooltip service
 import './tooltipService.js'
 
@@ -60,6 +65,9 @@ import './miscWokrbenchContrib.js'
 
 // register file service (for explorer context menu)
 import './fileService.js'
+
+// register credits status bar
+import './creditsStatusBar.js'
 
 // register source control management
 import './voidSCMService.js'

@@ -1,0 +1,26 @@
+ИСПРАВЛЕНИЕ: Двойной вызов onFinalMessage
+
+Файл: C:\void\void\src\vs\workbench\contrib\void\electron-main\llmMessage\sendLLMMessage.impl.ts
+
+Найди строку ~380 (после onFinalMessage в non-streaming блоке):
+
+				onFinalMessage({ 
+					fullText: fullTextSoFar, 
+					fullReasoning: fullReasoningSoFar, 
+					anthropicReasoning: null, 
+					...toolCallObj 
+				});
+			}
+
+ЗАМЕНИ на (добавь return):
+
+				onFinalMessage({ 
+					fullText: fullTextSoFar, 
+					fullReasoning: fullReasoningSoFar, 
+					anthropicReasoning: null, 
+					...toolCallObj 
+				});
+				return; // ✅ Выходим, чтобы не вызвать onFinalMessage второй раз
+			}
+
+Это предотвратит двойной вызов onFinalMessage (строка 571).

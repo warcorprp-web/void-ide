@@ -223,9 +223,9 @@ export const StatusIndicatorForApplyButton = ({ applyBoxId, uri }: { applyBoxId:
 	)
 
 	const tooltipName = (
-		currStreamState === 'idle-no-changes' ? 'Done' :
-			currStreamState === 'streaming' ? 'Applying' :
-				currStreamState === 'idle-has-changes' ? 'Done' : // also 'Done'? 'Applied' looked bad
+		currStreamState === 'idle-no-changes' ? 'Готово' :
+			currStreamState === 'streaming' ? 'Применение' :
+				currStreamState === 'idle-has-changes' ? 'Готово' : // also 'Done'? 'Applied' looked bad
 					''
 	)
 

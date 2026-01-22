@@ -44,42 +44,42 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 		if (this._updateService.state.type === StateType.Uninitialized) {
 			// The update service hasn't been initialized yet
-			return { message: explicit ? 'Checking for updates soon...' : null, action: explicit ? 'reinstall' : undefined } as const
+			return { message: explicit ? 'Скоро проверим обновления...' : null, action: explicit ? 'reinstall' : undefined } as const
 		}
 
 		if (this._updateService.state.type === StateType.Idle) {
 			// No updates currently available
-			return { message: explicit ? 'No updates found!' : null, action: explicit ? 'reinstall' : undefined } as const
+			return { message: explicit ? 'Обновлений не найдено!' : null, action: explicit ? 'reinstall' : undefined } as const
 		}
 
 		if (this._updateService.state.type === StateType.CheckingForUpdates) {
 			// Currently checking for updates
-			return { message: explicit ? 'Checking for updates...' : null } as const
+			return { message: explicit ? 'Проверка обновлений...' : null } as const
 		}
 
 		if (this._updateService.state.type === StateType.AvailableForDownload) {
 			// Update available but requires manual download (mainly for Linux)
-			return { message: 'A new update is available!', action: 'download', } as const
+			return { message: 'Доступно новое обновление!', action: 'download', } as const
 		}
 
 		if (this._updateService.state.type === StateType.Downloading) {
 			// Update is currently being downloaded
-			return { message: explicit ? 'Currently downloading update...' : null } as const
+			return { message: explicit ? 'Загрузка обновления...' : null } as const
 		}
 
 		if (this._updateService.state.type === StateType.Downloaded) {
 			// Update has been downloaded but not yet ready
-			return { message: explicit ? 'An update is ready to be applied!' : null, action: 'apply' } as const
+			return { message: explicit ? 'Обновление готово к установке!' : null, action: 'apply' } as const
 		}
 
 		if (this._updateService.state.type === StateType.Updating) {
 			// Update is being applied
-			return { message: explicit ? 'Applying update...' : null } as const
+			return { message: explicit ? 'Установка обновления...' : null } as const
 		}
 
 		if (this._updateService.state.type === StateType.Ready) {
 			// Update is ready
-			return { message: 'Restart Void to update!', action: 'restart' } as const
+			return { message: 'Перезапустите Искра для обновления!', action: 'restart' } as const
 		}
 
 		if (this._updateService.state.type === StateType.Disabled) {
@@ -112,22 +112,22 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 			if (explicit) {
 				if (response.ok) {
 					if (!isUpToDate) {
-						message = 'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+						message = 'Доступна новая версия Искра! Пожалуйста, переустановите (автообновления отключены на этой ОС) - это займет всего секунду!'
 						action = 'reinstall'
 					}
 					else {
-						message = 'Void is up-to-date!'
+						message = 'Искра обновлена до последней версии!'
 					}
 				}
 				else {
-					message = `An error occurred when fetching the latest GitHub release tag. Please try again in ~5 minutes, or reinstall.`
+					message = `Произошла ошибка при получении последнего релиза с GitHub. Попробуйте снова через ~5 минут или переустановите.`
 					action = 'reinstall'
 				}
 			}
 			// not explicit
 			else {
 				if (response.ok && !isUpToDate) {
-					message = 'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+					message = 'Доступна новая версия Искра! Пожалуйста, переустановите (автообновления отключены на этой ОС) - это займет всего секунду!'
 					action = 'reinstall'
 				}
 				else {
@@ -139,7 +139,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 		catch (e) {
 			if (explicit) {
 				return {
-					message: `An error occurred when fetching the latest GitHub release tag: ${e}. Please try again in ~5 minutes.`,
+					message: `Произошла ошибка при получении последнего релиза с GitHub: ${e}. Попробуйте снова через ~5 минут.`,
 					action: 'reinstall',
 				}
 			}

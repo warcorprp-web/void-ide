@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------------------------
- *  Copyright 2025 Glass Devtools, Inc. All rights reserved.
+ *  Copyright 2025 Glass Devtools, Inc. Al l rights reserved.
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
@@ -29,6 +29,41 @@ const getGoogleApiKey = async () => {
 	return key
 }
 
+// Проверка лимитов для Искра провайдеров
+const checkIskraLimits = async (providerName: ProviderName, iskraAuth: { token: string; userData: any } | undefined): Promise<{ allowed: boolean; message?: string }> => {
+	if (providerName !== 'ceillerClaude' && providerName !== 'ceillerQwen') {
+		return { allowed: true };
+	}
+
+	if (!iskraAuth || !iskraAuth.token) {
+		return { allowed: false, message: 'Требуется авторизация в Искра. Откройте настройки и войдите в систему.' };
+	}
+
+	const userData = iskraAuth.userData;
+	if (!userData) {
+		return { allowed: false, message: 'Не удалось получить данные пользователя' };
+	}
+
+	// Проверяем лимиты
+	const tierLimits = {
+		free: 20,
+		pro: 500,
+		pro_plus: 2000
+	};
+
+	const requestsTotal = userData.requestsTotal || tierLimits[userData.tier as keyof typeof tierLimits] || 20;
+	const requestsUsed = userData.requestsUsed || 0;
+
+	if (requestsUsed >= requestsTotal) {
+		const upgradeMessage = userData.tier === 'free' 
+			? 'Лимит запросов исчерпан. Обновите тариф до Pro (500 запросов/день) или Pro+ (2000 запросов/день) в настройках.'
+			: 'Лимит запросов на сегодня исчерпан. Попробуйте завтра или обновите тариф.';
+		return { allowed: false, message: upgradeMessage };
+	}
+
+	return { allowed: true };
+};
+
 
 
 
@@ -42,6 +77,7 @@ type InternalCommonMessageParams = {
 	overridesOfModel: OverridesOfModel | undefined;
 	modelName: string;
 	_setAborter: (aborter: () => void) => void;
+	iskraAuth?: { token: string; userData: any }; // Данные авторизации Искра
 }
 
 type SendChatParams_Internal = InternalCommonMessageParams & {
@@ -69,7 +105,7 @@ const parseHeadersJSON = (s: string | undefined): Record<string, string | null |
 	}
 }
 
-const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName, includeInPayload }: { settingsOfProvider: SettingsOfProvider, providerName: ProviderName, includeInPayload?: { [s: string]: any } }) => {
+const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName, includeInPayload, iskraAuth }: { settingsOfProvider: SettingsOfProvider, providerName: ProviderName, includeInPayload?: { [s: string]: any }, iskraAuth?: { token: string; userData: any } }) => {
 	const commonPayloadOpts: ClientOptions = {
 		dangerouslyAllowBrowser: true,
 		...includeInPayload,
@@ -101,7 +137,7 @@ const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName, includ
 			apiKey: thisConfig.apiKey,
 			defaultHeaders: {
 				'HTTP-Referer': 'https://voideditor.com', // Optional, for including your app on openrouter.ai rankings.
-				'X-Title': 'Void', // Optional. Shows in rankings on openrouter.ai.
+				'X-Title': 'Iskra', // Optional. Shows in rankings on openrouter.ai.
 			},
 			...commonPayloadOpts,
 		})
@@ -167,8 +203,44 @@ const newOpenAICompatibleSDK = async ({ settingsOfProvider, providerName, includ
 		const thisConfig = settingsOfProvider[providerName]
 		return new OpenAI({ baseURL: 'https://api.mistral.ai/v1', apiKey: thisConfig.apiKey, ...commonPayloadOpts })
 	}
+	else if (providerName === 'ceillerQwen') {
+		const userToken = iskraAuth?.token;
+		
+		if (!userToken) {
+			throw new Error('Требуется авторизация в Искра. Откройте настройки и войдите в систему.');
+		}
+		
+		console.log('[Iskra] Creating OpenAI client for ceillerQwen');
+		console.log('[Iskra] baseURL: https://cli.cryptocatslab.ru/ai');
+		console.log('[Iskra] token length:', userToken.length);
+		
+		// Искра API - baseURL без /v1, SDK добавит его автоматически
+		return new OpenAI({ 
+			baseURL: 'https://cli.cryptocatslab.ru/ai',
+			apiKey: userToken,
+			...commonPayloadOpts 
+		})
+	}
+	else if (providerName === 'ceillerClaude') {
+		const userToken = iskraAuth?.token;
+		
+		if (!userToken) {
+			throw new Error('Требуется авторизация в Искра. Откройте настройки и войдите в систему.');
+		}
+		
+		console.log('[Iskra] Creating OpenAI client for ceillerClaude');
+		console.log('[Iskra] baseURL: https://cli.cryptocatslab.ru/ai');
+		console.log('[Iskra] token length:', userToken.length);
+		
+		// Искра API - baseURL без /v1, SDK добавит его автоматически
+		return new OpenAI({ 
+			baseURL: 'https://cli.cryptocatslab.ru/ai',
+			apiKey: userToken,
+			...commonPayloadOpts 
+		})
+	}
 
-	else throw new Error(`Void providerName was invalid: ${providerName}.`)
+	else throw new Error(`Искра: неверный providerName: ${providerName}.`)
 }
 
 
@@ -222,7 +294,7 @@ const toOpenAICompatibleTool = (toolInfo: InternalToolInfo) => {
 			description: description,
 			parameters: {
 				type: 'object',
-				properties: params,
+				properties: paramsWithType,
 				// required: Object.keys(params), // in strict mode, all params are required and additionalProperties is false
 				// additionalProperties: false,
 			},
@@ -244,15 +316,42 @@ const openAITools = (chatMode: ChatMode | null, mcpTools: InternalToolInfo[] | u
 
 // convert LLM tool call to our tool format
 const rawToolCallObjOfParamsStr = (name: string, toolParamsStr: string, id: string): RawToolCallObj | null => {
+	console.log('[Iskra] rawToolCallObjOfParamsStr called:', {
+		name,
+		id,
+		paramsStrLength: toolParamsStr.length,
+		paramsStrPreview: toolParamsStr.substring(0, 200)
+	});
+	
 	let input: unknown
-	try { input = JSON.parse(toolParamsStr) }
-	catch (e) { return null }
+	try { 
+		input = JSON.parse(toolParamsStr);
+		console.log('[Iskra] JSON parsed successfully, type:', typeof input);
+	}
+	catch (e) { 
+		console.error('[Iskra] JSON parse failed:', e);
+		console.error('[Iskra] Failed to parse:', toolParamsStr);
+		return null;
+	}
 
-	if (input === null) return null
-	if (typeof input !== 'object') return null
+	if (input === null) {
+		console.log('[Iskra] Input is null');
+		return null;
+	}
+	if (typeof input !== 'object') {
+		console.log('[Iskra] Input is not object, type:', typeof input);
+		return null;
+	}
 
-	const rawParams: RawToolParamsObj = input
-	return { id, name, rawParams, doneParams: Object.keys(rawParams), isDone: true }
+	const rawParams: RawToolParamsObj = input;
+	const result = { id, name, rawParams, doneParams: Object.keys(rawParams), isDone: true };
+	console.log('[Iskra] rawToolCallObj created successfully:', {
+		id,
+		name,
+		paramsKeys: Object.keys(rawParams),
+		isDone: true
+	});
+	return result;
 }
 
 
@@ -267,10 +366,20 @@ const rawToolCallObjOfAnthropicParams = (toolBlock: Anthropic.Messages.ToolUseBl
 }
 
 
-// ------------ OPENAI-COMPATIBLE ------------
 
 
-const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, modelName: modelName_, _setAborter, providerName, chatMode, separateSystemMessage, overridesOfModel, mcpTools }: SendChatParams_Internal) => {
+
+const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, modelName: modelName_, _setAborter, providerName, chatMode, separateSystemMessage, overridesOfModel, mcpTools, iskraAuth }: SendChatParams_Internal) => {
+	
+	// Проверяем лимиты для Искра провайдеров
+	if (providerName === 'ceillerClaude' || providerName === 'ceillerQwen') {
+		const limitCheck = await checkIskraLimits(providerName, iskraAuth);
+		if (!limitCheck.allowed) {
+			onError({ message: limitCheck.message || 'Доступ запрещен', fullError: null });
+			return;
+		}
+	}
+
 	const {
 		modelName,
 		specialToolFormat,
@@ -295,19 +404,69 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 		{ tools: potentialTools } as const
 		: {}
 
+	// DEBUG: Проверка tools
+	console.log('[Iskra Debug] Tools check:', {
+		providerName,
+		modelName,
+		chatMode,
+		specialToolFormat,
+		hasPotentialTools: !!potentialTools,
+		potentialToolsCount: potentialTools?.length || 0,
+		hasNativeToolsObj: !!nativeToolsObj.tools,
+		nativeToolsCount: nativeToolsObj.tools?.length || 0,
+		toolNames: nativeToolsObj.tools?.map(t => t.function.name) || []
+	});
+
 	// instance
-	const openai: OpenAI = await newOpenAICompatibleSDK({ providerName, settingsOfProvider, includeInPayload })
+	const openai: OpenAI = await newOpenAICompatibleSDK({ providerName, settingsOfProvider, includeInPayload, iskraAuth })
 	if (providerName === 'microsoftAzure') {
 		// Required to select the model
 		(openai as AzureOpenAI).deploymentName = modelName;
 	}
-	const options: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+	const options: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming | OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 		model: modelName,
 		messages: messages as any,
 		stream: true,
 		...nativeToolsObj,
 		...additionalOpenAIPayload
 		// max_completion_tokens: maxTokens,
+	}
+
+	// Отключаем streaming если есть tools (streaming может некорректно работать с tool_calls)
+	if (nativeToolsObj.tools && nativeToolsObj.tools.length > 0) {
+		(options as unknown as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming).stream = false;
+		// Используем reservedOutputTokenSpace из настроек модели для max_tokens
+		// Это гарантирует, что модель успеет вызвать инструменты без упора в лимит
+		const maxTokens = getReservedOutputTokenSpace(providerName, modelName_, { isReasoningEnabled: false, overridesOfModel });
+		(options as any).max_tokens = maxTokens || 8192; // Fallback на 8192 если не указано
+		console.log(`[Iskra] Set max_tokens=${maxTokens || 8192} for ${providerName} with tools`);
+		console.log('[Iskra] Disabled streaming because tools are present');
+	}
+
+	// DEBUG: Логируем финальные options
+	if (providerName === 'ceillerClaude' || providerName === 'ceillerQwen') {
+		console.log('[Iskra] Final request options:', {
+			model: options.model,
+			messagesCount: options.messages.length,
+			hasTools: !!options.tools,
+			toolsCount: options.tools?.length || 0,
+			firstToolName: options.tools?.[0]?.function?.name,
+			stream: options.stream,
+			max_tokens: (options as any).max_tokens || 'default'
+		});
+		
+		if (options.tools && options.tools.length > 0) {
+			console.log('[Iskra] First tool details:', JSON.stringify(options.tools[0], null, 2));
+		}
+		
+		// DEBUG: Логируем полный запрос
+		console.log('[Iskra] Full request body:', JSON.stringify({
+			model: options.model,
+			messages: options.messages,
+			tools: options.tools,
+			stream: options.stream,
+			max_tokens: (options as any).max_tokens
+		}, null, 2));
 	}
 
 	// open source models - manually parse think tokens
@@ -333,46 +492,126 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	let toolId = ''
 	let toolParamsStr = ''
 
+	// DEBUG: Что РЕАЛЬНО передается в SDK
+	if (providerName === 'ceillerClaude' || providerName === 'ceillerQwen') {
+		console.log('[Iskra] Calling OpenAI SDK with options:', JSON.stringify({
+			model: options.model,
+			messagesCount: options.messages?.length,
+			toolsCount: options.tools?.length,
+			stream: options.stream,
+			hasTools: !!options.tools,
+			max_tokens: (options as any).max_tokens || 'default'
+		}));
+		if (options.tools && options.tools.length > 0) {
+			console.log('[Iskra] First tool before SDK call:', JSON.stringify(options.tools[0], null, 2));
+		}
+	}
+
 	openai.chat.completions
 		.create(options)
 		.then(async response => {
-			_setAborter(() => response.controller.abort())
-			// when receive text
-			for await (const chunk of response) {
-				// message
-				const newText = chunk.choices[0]?.delta?.content ?? ''
-				fullTextSoFar += newText
-
-				// tool call
-				for (const tool of chunk.choices[0]?.delta?.tool_calls ?? []) {
-					const index = tool.index
-					if (index !== 0) continue
-
-					toolName += tool.function?.name ?? ''
-					toolParamsStr += tool.function?.arguments ?? '';
-					toolId += tool.id ?? ''
+			_setAborter(() => response.controller?.abort?.())
+			
+			// Проверяем, streaming или обычный ответ
+			// Сохраняем значение в переменную, чтобы TypeScript понял что оно может быть false
+			const isStreaming = (options as any).stream !== false;
+			
+			if (!isStreaming) {
+				// Обработка обычного (не-streaming) ответа
+				console.log('[Iskra] Processing non-streaming response');
+				const completion = response as any;
+				const message = completion.choices?.[0]?.message;
+				const finishReason = completion.choices?.[0]?.finish_reason;
+				
+				console.log('[Iskra] Response details:', {
+					hasMessage: !!message,
+					hasContent: !!message?.content,
+					hasToolCalls: !!message?.tool_calls,
+					toolCallsCount: message?.tool_calls?.length || 0,
+					finishReason: finishReason,
+					contentLength: message?.content?.length || 0
+				});
+				
+				if (message) {
+					fullTextSoFar = message.content || '';
+					
+					// Обработка tool calls
+					if (message.tool_calls && message.tool_calls.length > 0) {
+						const firstTool = message.tool_calls[0];
+						toolName = firstTool.function?.name || '';
+						toolParamsStr = firstTool.function?.arguments || '';
+						toolId = firstTool.id || '';
+						
+						console.log('[Iskra] Tool call received:', {
+							toolName,
+							toolId,
+							paramsLength: toolParamsStr.length,
+							finishReason: finishReason
+						});
+						
+						// DEBUG: Полный tool call объект
+						console.log('[Iskra] Full tool call object:', JSON.stringify(firstTool, null, 2));
+						console.log('[Iskra] Arguments type:', typeof firstTool.function?.arguments);
+						console.log('[Iskra] Full arguments:', firstTool.function?.arguments);
+					}
+					
+					// Вызываем onText один раз с полным результатом
+					onText({
+						fullText: fullTextSoFar,
+						fullReasoning: fullReasoningSoFar,
+						toolCall: !toolName ? undefined : { name: toolName, rawParams: {}, isDone: false, doneParams: [], id: toolId },
+					});
+					
+					// Вызываем onFinalMessage для завершения и выполнения tool
+					const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId);
+					const toolCallObj = toolCall ? { toolCall } : {};
+					console.log('[Iskra] Calling onFinalMessage with toolCall:', !!toolCall);
+					onFinalMessage({ 
+						fullText: fullTextSoFar, 
+						fullReasoning: fullReasoningSoFar, 
+						anthropicReasoning: null, 
+						...toolCallObj 
+					});
+					return; // Выходим, чтобы не вызвать onFinalMessage дважды
 				}
+			} else {
+				// Обработка streaming ответа (оригинальный код)
+				for await (const chunk of response) {
+					// message
+					const newText = chunk.choices[0]?.delta?.content ?? ''
+					fullTextSoFar += newText
+
+					// tool call
+					for (const tool of chunk.choices[0]?.delta?.tool_calls ?? []) {
+						const index = tool.index
+						if (index !== 0) continue
+
+						toolName += tool.function?.name ?? ''
+						toolParamsStr += tool.function?.arguments ?? '';
+						toolId += tool.id ?? ''
+					}
 
 
-				// reasoning
-				let newReasoning = ''
-				if (nameOfReasoningFieldInDelta) {
-					// @ts-ignore
-					newReasoning = (chunk.choices[0]?.delta?.[nameOfReasoningFieldInDelta] || '') + ''
-					fullReasoningSoFar += newReasoning
+					// reasoning
+					let newReasoning = ''
+					if (nameOfReasoningFieldInDelta) {
+						// @ts-ignore
+						newReasoning = (chunk.choices[0]?.delta?.[nameOfReasoningFieldInDelta] || '') + ''
+						fullReasoningSoFar += newReasoning
+					}
+
+					// call onText
+					onText({
+						fullText: fullTextSoFar,
+						fullReasoning: fullReasoningSoFar,
+						toolCall: !toolName ? undefined : { name: toolName, rawParams: {}, isDone: false, doneParams: [], id: toolId },
+					})
 				}
-
-				// call onText
-				onText({
-					fullText: fullTextSoFar,
-					fullReasoning: fullReasoningSoFar,
-					toolCall: !toolName ? undefined : { name: toolName, rawParams: {}, isDone: false, doneParams: [], id: toolId },
-				})
-
 			}
+			
 			// on final
 			if (!fullTextSoFar && !fullReasoningSoFar && !toolName) {
-				onError({ message: 'Void: Response from model was empty.', fullError: null })
+				onError({ message: 'Искра: Ответ от модели пустой.', fullError: null })
 			}
 			else {
 				const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId)
@@ -580,6 +819,7 @@ const sendAnthropicChat = async ({ messages, providerName, onText, onFinalMessag
 
 
 
+
 // ------------ MISTRAL ------------
 // https://docs.mistral.ai/api/#tag/fim
 const sendMistralFIM = ({ messages, onFinalMessage, onError, settingsOfProvider, overridesOfModel, modelName: modelName_, _setAborter, providerName }: SendFIMParams_Internal) => {
@@ -620,7 +860,7 @@ const sendMistralFIM = ({ messages, onFinalMessage, onError, settingsOfProvider,
 // ------------ OLLAMA ------------
 const newOllamaSDK = ({ endpoint }: { endpoint: string }) => {
 	// if endpoint is empty, normally ollama will send to 11434, but we want it to fail - the user should type it in
-	if (!endpoint) throw new Error(`Ollama Endpoint was empty (please enter ${defaultProviderSettings.ollama.endpoint} in Void if you want the default url).`)
+	if (!endpoint) throw new Error(`Endpoint Ollama был пустым (пожалуйста, введите ${defaultProviderSettings.ollama.endpoint} в Искра, если хотите использовать URL по умолчанию).`)
 	const ollama = new Ollama({ host: endpoint })
 	return ollama
 }
@@ -817,7 +1057,7 @@ const sendGeminiChat = async ({
 
 			// on final
 			if (!fullTextSoFar && !fullReasoningSoFar && !toolName) {
-				onError({ message: 'Void: Response from model was empty.', fullError: null })
+				onError({ message: 'Искра: Ответ от модели пустой.', fullError: null })
 			} else {
 				if (!toolId) toolId = generateUuid() // ids are empty, but other providers might expect an id
 				const toolCall = rawToolCallObjOfParamsStr(toolName, toolParamsStr, toolId)
@@ -933,6 +1173,16 @@ export const sendLLMMessageToProviderImplementation = {
 		list: null,
 	},
 	awsBedrock: {
+		sendChat: (params) => _sendOpenAICompatibleChat(params),
+		sendFIM: null,
+		list: null,
+	},
+	ceillerClaude: {
+		sendChat: (params) => _sendOpenAICompatibleChat(params),
+		sendFIM: null,
+		list: null,
+	},
+	ceillerQwen: {
 		sendChat: (params) => _sendOpenAICompatibleChat(params),
 		sendFIM: null,
 		list: null,

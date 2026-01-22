@@ -151,6 +151,12 @@ const _validatedModelState = (state: Omit<VoidSettingsState, '_modelOptions'>): 
 	for (const providerName of providerNames) {
 		const settingsAtProvider = newSettingsOfProvider[providerName]
 
+		// Iskra providers don't require API keys - they use separate authentication
+		// So we skip the validation check for them
+		if (providerName === 'ceillerClaude' || providerName === 'ceillerQwen') {
+			continue;
+		}
+
 		const didFillInProviderSettings = Object.keys(defaultProviderSettings[providerName]).every(key => !!settingsAtProvider[key as keyof typeof settingsAtProvider])
 
 		if (didFillInProviderSettings === settingsAtProvider._didFillInProviderSettings) continue
@@ -274,6 +280,7 @@ class VoidSettingsService extends Disposable implements IVoidSettingsService {
 
 	async readAndInitializeState() {
 		let readS: VoidSettingsState
+		let needsSave = false;
 		try {
 			readS = await this._readState();
 			// 1.0.3 addition, remove when enough users have had this code run
@@ -329,6 +336,15 @@ class VoidSettingsService extends Disposable implements IVoidSettingsService {
 				if (providerName === 'openAICompatible' && !readS.settingsOfProvider[providerName].headersJSON) {
 					readS.settingsOfProvider[providerName].headersJSON = '{}'
 				}
+				
+				// Iskra providers migration: force _didFillInProviderSettings to true
+				// This must happen AFTER merging with defaults but BEFORE _validatedModelState
+				if ((providerName === 'ceillerClaude' || providerName === 'ceillerQwen') && 
+				    !readS.settingsOfProvider[providerName]._didFillInProviderSettings) {
+					console.log(`[VoidSettings] Migrating ${providerName}: false/undefined → true`);
+					readS.settingsOfProvider[providerName]._didFillInProviderSettings = true;
+					needsSave = true;
+				}
 			}
 		}
 
@@ -340,6 +356,11 @@ class VoidSettingsService extends Disposable implements IVoidSettingsService {
 		this.state = _stateWithMergedDefaultModels(this.state)
 		this.state = _validatedModelState(this.state);
 
+		// Save immediately if migration occurred
+		if (needsSave) {
+			console.log('[VoidSettings] Saving migrated state...');
+			await this._storeState();
+		}
 
 		this._resolver();
 		this._onDidChangeState.fire();
@@ -350,11 +371,14 @@ class VoidSettingsService extends Disposable implements IVoidSettingsService {
 	private async _readState(): Promise<VoidSettingsState> {
 		const encryptedState = this._storageService.get(VOID_SETTINGS_STORAGE_KEY, StorageScope.APPLICATION)
 
-		if (!encryptedState)
-			return defaultState()
+		if (!encryptedState) {
+			console.log('[VoidSettings] No saved state, using defaults');
+			return defaultState();
+		}
 
 		const stateStr = await this._encryptionService.decrypt(encryptedState)
 		const state = JSON.parse(stateStr)
+		
 		return state
 	}
 

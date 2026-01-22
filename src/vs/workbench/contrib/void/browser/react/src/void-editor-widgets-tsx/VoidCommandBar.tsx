@@ -230,7 +230,7 @@ export const VoidCommandBar = ({ uri, editor }: VoidCommandBarProps) => {
 						<div className="flex items-center [&>*]:border-r [&>*]:border-void-border-2 [&>*:last-child]:border-r-0">
 							<AcceptAllButtonWrapper
 								// text={`Accept All${acceptAllKeybindLabel ? ` ${acceptAllKeybindLabel}` : ''}`}
-								text={`Accept All`}
+								text={`Принять все`}
 								data-tooltip-id='void-tooltip'
 								data-tooltip-content={acceptAllKeybindLabel}
 								data-tooltip-delay-show={500}
@@ -238,7 +238,7 @@ export const VoidCommandBar = ({ uri, editor }: VoidCommandBarProps) => {
 								/>
 							<RejectAllButtonWrapper
 								// text={`Reject All${rejectAllKeybindLabel ? ` ${rejectAllKeybindLabel}` : ''}`}
-								text={`Reject All`}
+								text={`Отклонить все`}
 								data-tooltip-id='void-tooltip'
 								data-tooltip-content={rejectAllKeybindLabel}
 								data-tooltip-delay-show={500}
@@ -271,10 +271,10 @@ export const VoidCommandBar = ({ uri, editor }: VoidCommandBarProps) => {
 					</button>
 					<span className={`text-xs whitespace-nowrap px-1 ${!isADiffInThisFile ? 'opacity-70' : ''}`}>
 						{isADiffInThisFile
-							? `Diff ${(currDiffIdx ?? 0) + 1} of ${sortedDiffIds.length}`
+							? `Diff ${(currDiffIdx ?? 0) + 1} из ${sortedDiffIds.length}`
 							: streamState === 'streaming'
-								? 'No changes yet'
-								: 'No changes'
+								? 'Пока нет изменений'
+								: 'Нет изменений'
 						}
 
 					</span>
@@ -346,7 +346,7 @@ export const VoidCommandBar = ({ uri, editor }: VoidCommandBarProps) => {
 					<div className='flex self-stretch gap-0 !px-0 !py-0'>
 						<AcceptAllButtonWrapper
 							// text={`Accept File${acceptFileKeybindLabel ? ` ${acceptFileKeybindLabel}` : ''}`}
-							text={`Accept File`}
+							text={`Принять файл`}
 							data-tooltip-id='void-tooltip'
 							data-tooltip-content={acceptFileKeybindLabel}
 							data-tooltip-delay-show={500}
@@ -354,7 +354,7 @@ export const VoidCommandBar = ({ uri, editor }: VoidCommandBarProps) => {
 						/>
 						<RejectAllButtonWrapper
 							// text={`Reject File${rejectFileKeybindLabel ? ` ${rejectFileKeybindLabel}` : ''}`}
-							text={`Reject File`}
+							text={`Отклонить файл`}
 							data-tooltip-id='void-tooltip'
 							data-tooltip-content={rejectFileKeybindLabel}
 							data-tooltip-delay-show={500}
