@@ -37,18 +37,7 @@
     "serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery",
     "itemUrl": "https://marketplace.visualstudio.com/items"
   },
-  "builtInExtensions": [
-    {
-      "name": "vscode-language-pack-ru",
-      "version": "1.108.2026011409",
-      "repo": "https://github.com/Microsoft/vscode-loc",
-      "metadata": {
-        "id": "MS-CEINTL.vscode-language-pack-ru",
-        "publisherId": "MS-CEINTL",
-        "publisherDisplayName": "MS-CEINTL"
-      }
-    }
-  ],
+  "builtInExtensions": [],
   "linkProtectionTrustedDomains": [
     "https://github.com/yourusername/iskra",
     "https://ollama.com"
