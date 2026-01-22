@@ -42,6 +42,14 @@ jobs:
     - name: Build VS Code
       run: npm run gulp vscode-win32-x64
     
+    - name: List parent directory
+      run: |
+        echo "Listing parent directory:"
+        dir .. /b
+        echo "Checking for VSCode folder:"
+        if exist ..\VSCode-win32-x64 (echo VSCode-win32-x64 EXISTS) else (echo VSCode-win32-x64 NOT FOUND)
+      shell: cmd
+    
     - name: Upload build folder
       uses: actions/upload-artifact@v4
       with:
