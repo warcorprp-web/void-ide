@@ -354,7 +354,7 @@ export class AccountsActivityActionViewItem extends AbstractGlobalActivityAction
 	}
 
 	// Void: Override to open Void settings instead of showing accounts menu
-	protected override async run(): Promise<void> {
+	private override async run(): Promise<void> {
 		// Open Void settings
 		await this.commandService.executeCommand('workbench.action.openVoidSettings');
 	}
