@@ -48,9 +48,26 @@ jobs:
       working-directory: void-ide
       run: npm run gulp vscode-win32-x64
     
-    - name: Upload build folder
+    - name: Apply icon to exe
+      working-directory: void-ide
+      run: npm run gulp vscode-win32-x64-inno-updater
+    
+    - name: Create System Installer
+      working-directory: void-ide
+      run: npm run gulp vscode-win32-x64-system-setup
+      continue-on-error: true
+    
+    - name: Upload portable build
       uses: actions/upload-artifact@v4
       with:
-        name: void-ide-windows-x64
+        name: void-ide-windows-x64-portable
         path: VSCode-win32-x64/**/*
+        retention-days: 30
+    
+    - name: Upload installer
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: void-ide-windows-x64-installer
+        path: void-ide/.build/win32-x64/system-setup/*.exe
         retention-days: 30
