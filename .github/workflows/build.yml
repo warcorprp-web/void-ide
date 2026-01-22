@@ -13,8 +13,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        submodules: true
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -27,13 +25,13 @@ jobs:
         python-version: '3.11'
     
     - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      run: npm ci
       
     - name: Build VS Code
-      run: yarn gulp vscode-win32-x64-min
+      run: npm run gulp vscode-win32-x64-min
     
     - name: Package with electron-builder
-      run: yarn electron-builder --win --x64
+      run: npm run electron-builder -- --win --x64
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
