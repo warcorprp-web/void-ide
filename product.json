@@ -41,5 +41,6 @@
   "linkProtectionTrustedDomains": [
     "https://github.com/yourusername/iskra",
     "https://ollama.com"
-  ]
+  ],
+  "default-user-settings": "{\"locale\":\"ru\"}"
 }
