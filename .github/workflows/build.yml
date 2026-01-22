@@ -42,10 +42,16 @@ jobs:
     - name: Build VS Code
       run: npm run gulp vscode-win32-x64
     
+    - name: List build output
+      run: |
+        echo "Listing .build directory:"
+        dir .build /s /b
+      shell: cmd
+    
     - name: Upload build folder
       uses: actions/upload-artifact@v4
       with:
         name: void-ide-windows-x64
         path: |
-          .build/win32-x64/VSCode-win32-x64/**/*
+          .build/**/*
         retention-days: 30
