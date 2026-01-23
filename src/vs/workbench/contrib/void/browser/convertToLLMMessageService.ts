@@ -609,7 +609,55 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 			projectRules = undefined
 		}
 		
-		const systemMessage = chat_systemMessage({ workspaceFolders, openedURIs, directoryStr, activeURI, persistentTerminalIDs, chatMode, mcpTools, includeXMLToolDefinitions, projectRules })
+		// Try to read memory bank if it exists
+		let memoryBank: string | undefined
+		try {
+			const workspace = this.workspaceContextService.getWorkspace()
+			if (workspace && workspace.folders.length > 0) {
+				const workspaceFolder = workspace.folders[0].uri
+				const memoryUri = workspaceFolder.with({ path: `${workspaceFolder.path}/.iskra/memory.json` })
+				const memoryFile = await this.fileService.readFile(memoryUri)
+				const memoryData = JSON.parse(memoryFile.value.toString())
+				
+				// Format memory entries
+				if (memoryData.entries && memoryData.entries.length > 0) {
+					const grouped: Record<string, any[]> = {
+						preference: [],
+						decision: [],
+						solution: [],
+						pattern: [],
+					}
+					
+					memoryData.entries.forEach((entry: any) => {
+						if (grouped[entry.type]) {
+							grouped[entry.type].push(entry)
+						}
+					})
+					
+					const sections: string[] = []
+					
+					if (grouped.preference.length > 0) {
+						sections.push('User Preferences:\n' + grouped.preference.map((e: any) => `- ${e.content}`).join('\n'))
+					}
+					if (grouped.decision.length > 0) {
+						sections.push('Architectural Decisions:\n' + grouped.decision.map((e: any) => `- ${e.content}`).join('\n'))
+					}
+					if (grouped.solution.length > 0) {
+						sections.push('Known Solutions:\n' + grouped.solution.map((e: any) => `- ${e.content}${e.context ? ` (${e.context})` : ''}`).join('\n'))
+					}
+					if (grouped.pattern.length > 0) {
+						sections.push('Code Patterns:\n' + grouped.pattern.map((e: any) => `- ${e.content}`).join('\n'))
+					}
+					
+					memoryBank = sections.join('\n\n')
+				}
+			}
+		} catch {
+			// File doesn't exist or can't be read, that's ok
+			memoryBank = undefined
+		}
+		
+		const systemMessage = chat_systemMessage({ workspaceFolders, openedURIs, directoryStr, activeURI, persistentTerminalIDs, chatMode, mcpTools, includeXMLToolDefinitions, projectRules, memoryBank })
 		return systemMessage
 	}
 

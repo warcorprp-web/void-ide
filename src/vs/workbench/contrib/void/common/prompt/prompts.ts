@@ -397,13 +397,14 @@ export const availableTools = (chatMode: ChatMode | null, mcpTools: InternalTool
 		case 'architect':
 			// Architect: read + edit markdown only + TODO list
 			builtinToolNames = (Object.keys(builtinTools) as BuiltinToolName[])
-				.filter(toolName => 
-					(!(toolName in approvalTypeOfBuiltinToolName) || // read tools
-					toolName === 'write_to_file' || // for creating plans
-					toolName === 'run_command' || // for analysis
-					toolName === 'update_todo_list') && // for TODO management
-					toolName !== 'new_task' // no delegation
-				);
+				.filter(toolName => {
+					const hasApproval = toolName in approvalTypeOfBuiltinToolName;
+					return (!hasApproval || // read tools
+						toolName === 'write_to_file' || // for creating plans
+						toolName === 'run_command' || // for analysis
+						toolName === 'update_todo_list') && // for TODO management
+						toolName !== 'new_task'; // no delegation
+				});
 			effectiveMCPTools = mcpTools;
 			break;
 		
@@ -419,11 +420,12 @@ export const availableTools = (chatMode: ChatMode | null, mcpTools: InternalTool
 		case 'orchestrator':
 			// Orchestrator: minimal tools + new_task for delegation
 			builtinToolNames = (Object.keys(builtinTools) as BuiltinToolName[])
-				.filter(toolName => 
-					!(toolName in approvalTypeOfBuiltinToolName) || // read tools
-					toolName === 'write_to_file' || // for tracking
-					toolName === 'new_task' // delegation tool
-				);
+				.filter(toolName => {
+					const hasApproval = toolName in approvalTypeOfBuiltinToolName;
+					return !hasApproval || // read tools
+						toolName === 'write_to_file' || // for tracking
+						toolName === 'new_task'; // delegation tool
+				});
 			effectiveMCPTools = mcpTools;
 			break;
 		
@@ -491,7 +493,7 @@ const systemToolsXMLPrompt = (chatMode: ChatMode, mcpTools: InternalToolInfo[] |
 // ======================================================== chat (normal, gather, agent) ========================================================
 
 
-export const chat_systemMessage = ({ workspaceFolders, openedURIs, activeURI, persistentTerminalIDs, directoryStr, chatMode: mode, mcpTools, includeXMLToolDefinitions, projectRules }: { workspaceFolders: string[], directoryStr: string, openedURIs: string[], activeURI: string | undefined, persistentTerminalIDs: string[], chatMode: ChatMode, mcpTools: InternalToolInfo[] | undefined, includeXMLToolDefinitions: boolean, projectRules?: string }) => {
+export const chat_systemMessage = ({ workspaceFolders, openedURIs, activeURI, persistentTerminalIDs, directoryStr, chatMode: mode, mcpTools, includeXMLToolDefinitions, projectRules, memoryBank }: { workspaceFolders: string[], directoryStr: string, openedURIs: string[], activeURI: string | undefined, persistentTerminalIDs: string[], chatMode: ChatMode, mcpTools: InternalToolInfo[] | undefined, includeXMLToolDefinitions: boolean, projectRules?: string, memoryBank?: string }) => {
 	
 	// Get mode configuration
 	const modeConfig = chatModeConfigs[mode]
@@ -531,6 +533,15 @@ ${projectRules}
 </project_rules>
 
 IMPORTANT: Follow these project rules strictly when writing code or making suggestions.`) : ''
+
+	const memoryBankInfo = memoryBank ? (`
+
+Here is your memory bank - important information you've learned about this project and user:
+<memory_bank>
+${memoryBank}
+</memory_bank>
+
+IMPORTANT: Use this information to provide better, context-aware assistance.`) : ''
 
 
 	const fsInfo = (`Here is an overview of the user's file system:
@@ -607,6 +618,7 @@ ${details.map((d, i) => `${i + 1}. ${d}`).join('\n\n')}`)
 	ansStrs.push(header)
 	ansStrs.push(sysInfo)
 	if (projectRulesInfo) ansStrs.push(projectRulesInfo)
+	if (memoryBankInfo) ansStrs.push(memoryBankInfo)
 	if (toolDefinitions) ansStrs.push(toolDefinitions)
 	if (nativeToolInstructions) ansStrs.push(nativeToolInstructions)
 	ansStrs.push(importantDetails)

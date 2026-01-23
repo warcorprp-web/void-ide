@@ -511,8 +511,6 @@ export class ToolsService implements IToolsService {
 			},
 			update_todo_list: async ({ todos }) => {
 				// Store TODO list in thread state
-				const currentThread = this.chatThreadService.getCurrentThread();
-				
 				// Update thread with TODO list
 				this.chatThreadService.setCurrentThreadState({
 					todoList: todos,
@@ -657,3 +655,7 @@ export class ToolsService implements IToolsService {
 }
 
 registerSingleton(IToolsService, ToolsService, InstantiationType.Eager);
+
+// Register Memory Bank Service
+import { IMemoryBankService, MemoryBankService } from './memoryBankService.js';
+registerSingleton(IMemoryBankService, MemoryBankService, InstantiationType.Delayed);

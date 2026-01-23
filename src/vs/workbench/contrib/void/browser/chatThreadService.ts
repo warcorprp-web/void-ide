@@ -14,7 +14,7 @@ import { ILLMMessageService } from '../common/sendLLMMessageService.js';
 import { chat_userMessageContent, isABuiltinToolName, builtinTools } from '../common/prompt/prompts.js';
 import { AnthropicReasoning, getErrorMessage, RawToolCallObj, RawToolParamsObj } from '../common/sendLLMMessageTypes.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
-import { FeatureName, ModelSelection, ModelSelectionOptions } from '../common/voidSettingsTypes.js';
+import { FeatureName, ModelSelection, ModelSelectionOptions, ChatMode } from '../common/voidSettingsTypes.js';
 import { IVoidSettingsService } from '../common/voidSettingsService.js';
 import { approvalTypeOfBuiltinToolName, BuiltinToolCallParams, ToolCallParams, ToolName, ToolResult } from '../common/toolsServiceTypes.js';
 import { IToolsService } from './toolsService.js';
@@ -791,7 +791,7 @@ Enhanced request (respond with ONLY the enhanced version, no explanations):`;
 				enhancementComplete = resolve;
 			});
 
-			const cancelToken = this._llmMessageService.sendLLMMessage({
+			this._llmMessageService.sendLLMMessage({
 				messagesType: 'chatMessages',
 				chatMode: 'normal',
 				messages: [
@@ -812,6 +812,9 @@ Enhanced request (respond with ONLY the enhanced version, no explanations):`;
 					enhancementComplete(enhanced);
 				},
 				onError: () => {
+					enhancementComplete('');
+				},
+				onAbort: () => {
 					enhancementComplete('');
 				},
 			});
@@ -1771,10 +1774,14 @@ We only need to do it for files that were edited since `from`, ie files between 
 		const updatedThread: ThreadType = {
 			...newThread,
 			messages: [{
-				type: 'user',
-				text: message,
-				selections: [],
-				ts: Date.now(),
+				role: 'user',
+				content: message,
+				displayContent: message,
+				selections: null,
+				state: {
+					stagingSelections: [],
+					isBeingEdited: false,
+				}
 			}],
 			title: `Subtask: ${mode}`,
 			parentThreadId,

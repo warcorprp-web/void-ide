@@ -1648,7 +1648,10 @@ const AssistantMessageComponent = ({ chatMessage, isCheckpointGhost, isCommitted
 
 		{/* assistant message - БЕЗ ОБВОДКИ */}
 		{filteredContent &&
-			<div className={`${isCheckpointGhost ? 'opacity-50' : ''}`}>
+			<div className={`${isCheckpointGhost ? 'opacity-50' : ''} relative group`}>
+				<div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
+					<CopyButton codeStr={filteredContent} toolTipName='Копировать ответ' />
+				</div>
 				<ProseWrapper>
 					<ChatMarkdownRender
 						string={filteredContent}

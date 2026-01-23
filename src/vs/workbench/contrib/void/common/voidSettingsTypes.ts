@@ -617,3 +617,19 @@ export interface MCPUserStateOfName {
 export interface MCPUserState {
 	isOn: boolean;
 }
+
+
+// Memory Bank types
+export type MemoryEntryType = 'preference' | 'decision' | 'solution' | 'pattern'
+
+export interface MemoryEntry {
+	id: string
+	type: MemoryEntryType
+	content: string
+	timestamp: number
+	context?: string
+}
+
+export interface MemoryBank {
+	entries: MemoryEntry[]
+}
