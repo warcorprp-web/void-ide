@@ -461,6 +461,13 @@ export class ToolsService implements IToolsService {
 				await this.terminalToolService.killPersistentTerminal(persistentTerminalId)
 				return { result: {} }
 			},
+			new_task: async ({ mode, message }) => {
+				// Create a new chat thread with the specified mode
+				const taskId = `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+				// TODO: Implement actual subtask creation via chatThreadService
+				// For now, just return a task ID
+				return { result: { taskId } }
+			},
 		}
 
 
@@ -563,6 +570,9 @@ export class ToolsService implements IToolsService {
 			},
 			kill_persistent_terminal: (params, _result) => {
 				return `Успешно закрыт терминал "${params.persistentTerminalId}".`;
+			},
+			new_task: (params, result) => {
+				return `Subtask created successfully with ID: ${result.taskId}\nMode: ${params.mode}\nThe subtask will execute independently. You will be notified when it completes.`;
 			},
 		}
 

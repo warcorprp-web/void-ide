@@ -336,6 +336,15 @@ export const builtinTools: {
 		name: 'kill_persistent_terminal',
 		description: `Interrupts and closes a persistent terminal that you opened with open_persistent_terminal.`,
 		params: { persistent_terminal_id: { description: `The ID of the persistent terminal.` } }
+	},
+
+	new_task: {
+		name: 'new_task',
+		description: `Creates a new subtask and delegates it to a specialized mode. Use this in Orchestrator mode to break down complex tasks. The subtask will run independently with its own context.`,
+		params: {
+			mode: { description: `The mode to use for this subtask. Options: 'architect', 'code', 'debug', 'ask'. Choose based on the subtask's goal.` },
+			message: { description: `Comprehensive instructions for the subtask. Must include: all necessary context, clearly defined scope, explicit instruction to use attempt_completion when done, and note that these instructions supersede general mode instructions.` }
+		}
 	}
 
 
@@ -360,21 +369,69 @@ export const isABuiltinToolName = (toolName: string): toolName is BuiltinToolNam
 
 export const availableTools = (chatMode: ChatMode | null, mcpTools: InternalToolInfo[] | undefined) => {
 
-	const builtinToolNames: BuiltinToolName[] | undefined = chatMode === 'normal' ? undefined
-		: chatMode === 'gather' ? (Object.keys(builtinTools) as BuiltinToolName[]).filter(toolName => !(toolName in approvalTypeOfBuiltinToolName))
-			: chatMode === 'agent' ? Object.keys(builtinTools) as BuiltinToolName[]
-				: undefined
+	let builtinToolNames: BuiltinToolName[] | undefined;
+	let effectiveMCPTools: InternalToolInfo[] | undefined;
 
-	const effectiveBuiltinTools = builtinToolNames?.map(toolName => builtinTools[toolName]) ?? undefined
-	const effectiveMCPTools = chatMode === 'agent' ? mcpTools : undefined
+	switch (chatMode) {
+		case 'normal':
+			builtinToolNames = undefined;
+			effectiveMCPTools = undefined;
+			break;
+		
+		case 'gather':
+		case 'ask':
+			// Read-only modes: no edit tools
+			builtinToolNames = (Object.keys(builtinTools) as BuiltinToolName[])
+				.filter(toolName => !(toolName in approvalTypeOfBuiltinToolName) && toolName !== 'new_task');
+			effectiveMCPTools = mcpTools; // MCP tools allowed
+			break;
+		
+		case 'architect':
+			// Architect: read + edit markdown only (simulated by allowing all read tools + write_to_file)
+			builtinToolNames = (Object.keys(builtinTools) as BuiltinToolName[])
+				.filter(toolName => 
+					(!(toolName in approvalTypeOfBuiltinToolName) || // read tools
+					toolName === 'write_to_file' || // for creating plans
+					toolName === 'execute_command') && // for analysis
+					toolName !== 'new_task' // no delegation
+				);
+			effectiveMCPTools = mcpTools;
+			break;
+		
+		case 'code':
+		case 'debug':
+		case 'agent':
+			// Full access to all tools except new_task
+			builtinToolNames = (Object.keys(builtinTools) as BuiltinToolName[])
+				.filter(toolName => toolName !== 'new_task');
+			effectiveMCPTools = mcpTools;
+			break;
+		
+		case 'orchestrator':
+			// Orchestrator: minimal tools + new_task for delegation
+			builtinToolNames = (Object.keys(builtinTools) as BuiltinToolName[])
+				.filter(toolName => 
+					!(toolName in approvalTypeOfBuiltinToolName) || // read tools
+					toolName === 'write_to_file' || // for tracking
+					toolName === 'new_task' // delegation tool
+				);
+			effectiveMCPTools = mcpTools;
+			break;
+		
+		default:
+			builtinToolNames = undefined;
+			effectiveMCPTools = undefined;
+	}
 
-	const tools: InternalToolInfo[] | undefined = !(builtinToolNames || mcpTools) ? undefined
+	const effectiveBuiltinTools = builtinToolNames?.map(toolName => builtinTools[toolName]) ?? undefined;
+
+	const tools: InternalToolInfo[] | undefined = !(builtinToolNames || effectiveMCPTools) ? undefined
 		: [
 			...effectiveBuiltinTools ?? [],
 			...effectiveMCPTools ?? [],
-		]
+		];
 
-	return tools
+	return tools;
 }
 
 const toolCallDefinitionsXMLString = (tools: InternalToolInfo[]) => {
