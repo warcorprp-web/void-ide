@@ -407,6 +407,115 @@ const ChatModeDropdown = ({ className }: { className: string }) => {
 	)
 }
 
+// Project Rules generation banner
+const ProjectRulesBanner = ({ className }: { className?: string }) => {
+	const accessor = useAccessor()
+	const voidSettingsService = accessor.get('IVoidSettingsService')
+	const fileService = accessor.get('IFileService')
+	const workspaceContextService = accessor.get('IWorkspaceContextService')
+	const chatThreadsService = accessor.get('IChatThreadService')
+	
+	const settingsState = useSettingsState()
+	const [isGenerating, setIsGenerating] = useState(false)
+	const [shouldShow, setShouldShow] = useState(false)
+	
+	useEffect(() => {
+		// Check if we should show the banner
+		const checkShouldShow = async () => {
+			// Don't show if user dismissed it
+			if (settingsState.globalSettings.hideProjectRulesPrompt) {
+				setShouldShow(false)
+				return
+			}
+			
+			// Check if workspace is open
+			const workspace = workspaceContextService.getWorkspace()
+			if (!workspace || workspace.folders.length === 0) {
+				setShouldShow(false)
+				return
+			}
+			
+			// Check if .iskra/rules.md exists
+			const workspaceFolder = workspace.folders[0].uri
+			const rulesUri = workspaceFolder.with({ path: `${workspaceFolder.path}/.iskra/rules.md` })
+			
+			try {
+				await fileService.stat(rulesUri)
+				// File exists, don't show banner
+				setShouldShow(false)
+			} catch {
+				// File doesn't exist, show banner
+				setShouldShow(true)
+			}
+		}
+		
+		checkShouldShow()
+	}, [settingsState.globalSettings.hideProjectRulesPrompt])
+	
+	const handleGenerate = async () => {
+		setIsGenerating(true)
+		
+		// Add message to chat to generate rules
+		const message = 'Analyze this project and create a comprehensive rules.md file in .iskra/ directory. Include: code style (tabs/spaces, naming conventions), architectural patterns, used libraries and frameworks, project structure conventions, and any other important guidelines found in the codebase.'
+		
+		await chatThreadsService.addUserMessageAndStreamResponse({
+			userMessage: message,
+			threadId: chatThreadsService.state.currentThreadId
+		})
+		
+		setShouldShow(false)
+		setIsGenerating(false)
+	}
+	
+	const handleDismiss = () => {
+		setShouldShow(false)
+	}
+	
+	const handleNeverShow = () => {
+		voidSettingsService.setGlobalSetting('hideProjectRulesPrompt', true)
+		setShouldShow(false)
+	}
+	
+	if (!shouldShow) return null
+	
+	return (
+		<div className={`${className} bg-void-bg-2 border border-void-border-2 rounded-lg p-4 mb-4`}>
+			<div className="flex items-start gap-3">
+				<div className="text-2xl">🎯</div>
+				<div className="flex-1">
+					<div className="text-sm font-medium text-void-fg-1 mb-1">
+						Создать правила проекта?
+					</div>
+					<div className="text-xs text-void-fg-3 mb-3">
+						AI проанализирует ваш проект и создаст файл с правилами кода, стилем и архитектурными паттернами
+					</div>
+					<div className="flex gap-2">
+						<button
+							onClick={handleGenerate}
+							disabled={isGenerating}
+							className="px-3 py-1.5 text-xs font-medium bg-[#ff6600] text-white rounded hover:bg-[#ff7700] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+						>
+							{isGenerating ? 'Создаю...' : 'Создать правила'}
+						</button>
+						<button
+							onClick={handleDismiss}
+							className="px-3 py-1.5 text-xs font-medium text-void-fg-2 hover:text-void-fg-1 transition-colors"
+						>
+							Не сейчас
+						</button>
+						<button
+							onClick={handleNeverShow}
+							className="px-3 py-1.5 text-xs font-medium text-void-fg-3 hover:text-void-fg-2 transition-colors"
+						>
+							Больше не показывать
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+
 // Subtasks display component
 const SubtasksList = ({ className }: { className?: string }) => {
 	const accessor = useAccessor()
@@ -561,6 +670,9 @@ export const VoidChatArea: React.FC<VoidChatAreaProps> = ({
 							{featureName === 'Chat' && <ChatModeDropdown className='' />}
 							<ModelDropdown featureName={featureName} className='' />
 						</div>
+						
+						{/* Show project rules banner if needed */}
+						{featureName === 'Chat' && <ProjectRulesBanner className='' />}
 						
 						{/* Show subtasks list if any exist */}
 						{featureName === 'Chat' && <SubtasksList className='' />}

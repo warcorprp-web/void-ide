@@ -491,7 +491,7 @@ const systemToolsXMLPrompt = (chatMode: ChatMode, mcpTools: InternalToolInfo[] |
 // ======================================================== chat (normal, gather, agent) ========================================================
 
 
-export const chat_systemMessage = ({ workspaceFolders, openedURIs, activeURI, persistentTerminalIDs, directoryStr, chatMode: mode, mcpTools, includeXMLToolDefinitions }: { workspaceFolders: string[], directoryStr: string, openedURIs: string[], activeURI: string | undefined, persistentTerminalIDs: string[], chatMode: ChatMode, mcpTools: InternalToolInfo[] | undefined, includeXMLToolDefinitions: boolean }) => {
+export const chat_systemMessage = ({ workspaceFolders, openedURIs, activeURI, persistentTerminalIDs, directoryStr, chatMode: mode, mcpTools, includeXMLToolDefinitions, projectRules }: { workspaceFolders: string[], directoryStr: string, openedURIs: string[], activeURI: string | undefined, persistentTerminalIDs: string[], chatMode: ChatMode, mcpTools: InternalToolInfo[] | undefined, includeXMLToolDefinitions: boolean, projectRules?: string }) => {
 	
 	// Get mode configuration
 	const modeConfig = chatModeConfigs[mode]
@@ -522,6 +522,15 @@ ${openedURIs.join('\n') || 'NO OPENED FILES'}${''/* separator */}${mode === 'age
 
 - Persistent terminal IDs available for you to run commands in: ${persistentTerminalIDs.join(', ')}` : ''}
 </system_info>`)
+
+	const projectRulesInfo = projectRules ? (`
+
+Here are the project-specific rules and guidelines:
+<project_rules>
+${projectRules}
+</project_rules>
+
+IMPORTANT: Follow these project rules strictly when writing code or making suggestions.`) : ''
 
 
 	const fsInfo = (`Here is an overview of the user's file system:
@@ -597,6 +606,7 @@ ${details.map((d, i) => `${i + 1}. ${d}`).join('\n\n')}`)
 	const ansStrs: string[] = []
 	ansStrs.push(header)
 	ansStrs.push(sysInfo)
+	if (projectRulesInfo) ansStrs.push(projectRulesInfo)
 	if (toolDefinitions) ansStrs.push(toolDefinitions)
 	if (nativeToolInstructions) ansStrs.push(nativeToolInstructions)
 	ansStrs.push(importantDetails)

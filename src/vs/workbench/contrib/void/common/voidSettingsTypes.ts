@@ -493,7 +493,7 @@ export const chatModeConfigs: Record<ChatMode, {
 		description: 'Plan and design before implementation',
 		roleDefinition: 'You are Iskra, an experienced technical leader who is inquisitive and an excellent planner. Your goal is to gather information and get context to create a detailed plan for accomplishing the user\'s task.',
 		whenToUse: 'Use when you need to plan, design, or strategize before implementation. Perfect for breaking down complex problems, creating technical specifications, designing system architecture.',
-		customInstructions: '1. Gather information using provided tools to get context.\n2. Ask clarifying questions.\n3. Break down the task into clear, actionable steps.\n4. Create a detailed plan with specific, actionable items.\n5. Ask user for approval before implementation.',
+		customInstructions: '1. Gather information using provided tools to get context.\n2. Ask clarifying questions.\n3. Break down the task into clear, actionable steps.\n4. Create a detailed plan with specific, actionable items using update_todo_list tool.\n5. Ask user for approval before implementation.\n\nWhen asked to analyze project and create rules:\n1. Use get_dir_tree to understand project structure\n2. Read key files (package.json, tsconfig.json, main source files)\n3. Identify: code style (tabs/spaces, quotes), naming conventions, architectural patterns, used frameworks\n4. Create .iskra/rules.md with comprehensive guidelines\n5. Include sections: Code Style, Architecture, Naming Conventions, Project Structure, Best Practices',
 	},
 	code: {
 		name: 'Code',
@@ -544,6 +544,7 @@ export type GlobalSettings = {
 	disableSystemMessage: boolean;
 	autoAcceptLLMChanges: boolean;
 	enhancePrompts: boolean;
+	hideProjectRulesPrompt: boolean;
 }
 
 export const defaultGlobalSettings: GlobalSettings = {
@@ -561,6 +562,7 @@ export const defaultGlobalSettings: GlobalSettings = {
 	disableSystemMessage: false,
 	autoAcceptLLMChanges: false,
 	enhancePrompts: true,
+	hideProjectRulesPrompt: false,
 }
 
 export type GlobalSettingName = keyof GlobalSettings

@@ -593,7 +593,23 @@ class ConvertToLLMMessageService extends Disposable implements IConvertToLLMMess
 		const mcpTools = this.mcpService.getMCPTools()
 
 		const persistentTerminalIDs = this.terminalToolService.listPersistentTerminalIds()
-		const systemMessage = chat_systemMessage({ workspaceFolders, openedURIs, directoryStr, activeURI, persistentTerminalIDs, chatMode, mcpTools, includeXMLToolDefinitions })
+		
+		// Try to read project rules if they exist
+		let projectRules: string | undefined
+		try {
+			const workspace = this.workspaceContextService.getWorkspace()
+			if (workspace && workspace.folders.length > 0) {
+				const workspaceFolder = workspace.folders[0].uri
+				const rulesUri = workspaceFolder.with({ path: `${workspaceFolder.path}/.iskra/rules.md` })
+				const rulesFile = await this.fileService.readFile(rulesUri)
+				projectRules = rulesFile.value.toString()
+			}
+		} catch {
+			// File doesn't exist or can't be read, that's ok
+			projectRules = undefined
+		}
+		
+		const systemMessage = chat_systemMessage({ workspaceFolders, openedURIs, directoryStr, activeURI, persistentTerminalIDs, chatMode, mcpTools, includeXMLToolDefinitions, projectRules })
 		return systemMessage
 	}
 
