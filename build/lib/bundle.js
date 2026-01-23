@@ -27,6 +27,9 @@ const BOILERPLATE = [
     { start: /^var __disposeResources/, end: /^}\);$/ },
 ];
 function removeDuplicateTSBoilerplate(source, SEEN_BOILERPLATE = []) {
+    // First, replace 'export function' with 'function' for TypeScript helpers
+    source = source.replace(/^export function (__decorate|__param|__esDecorate|__metadata|__awaiter|__generator)/gm, 'function $1');
+    
     const lines = source.split(/\r\n|\n|\r/);
     const newLines = [];
     let IS_REMOVING_BOILERPLATE = false, END_BOILERPLATE;
@@ -55,9 +58,7 @@ function removeDuplicateTSBoilerplate(source, SEEN_BOILERPLATE = []) {
                 newLines.push('');
             }
             else {
-                // Replace 'export function __decorate' with 'function __decorate' to make it accessible in bundle
-                const modifiedLine = line.replace(/^export function (__decorate|__param|__esDecorate|__metadata|__awaiter|__generator)/, 'function $1');
-                newLines.push(modifiedLine);
+                newLines.push(line);
             }
         }
     }
