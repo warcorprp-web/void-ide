@@ -40,6 +40,13 @@ jobs:
       working-directory: void-ide
       run: npm ci
     
+    - name: Clean build artifacts
+      working-directory: void-ide
+      run: |
+        if (Test-Path out) { Remove-Item -Recurse -Force out }
+        if (Test-Path .build) { Remove-Item -Recurse -Force .build }
+      shell: pwsh
+    
     - name: Build React components
       working-directory: void-ide
       run: npm run buildreact
