@@ -37,7 +37,19 @@
     "serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery",
     "itemUrl": "https://marketplace.visualstudio.com/items"
   },
-  "builtInExtensions": [],
+  "builtInExtensions": [
+    {
+      "name": "cline",
+      "version": "latest",
+      "repo": "https://github.com/cline/cline",
+      "metadata": {
+        "id": "saoudrizwan.claude-dev",
+        "displayName": "Iskra AI Agent",
+        "publisherId": "iskra",
+        "publisherDisplayName": "Iskra IDE"
+      }
+    }
+  ],
   "linkProtectionTrustedDomains": [
     "https://github.com/yourusername/iskra",
     "https://ollama.com"

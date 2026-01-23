@@ -23,7 +23,7 @@ import { ChatMode, displayInfoOfProviderName, FeatureName, isFeatureNameDisabled
 import { ICommandService } from '../../../../../../../platform/commands/common/commands.js';
 import { WarningBox } from '../void-settings-tsx/WarningBox.js';
 import { getModelCapabilities, getIsReasoningEnabledState } from '../../../../common/modelCapabilities.js';
-import { AlertTriangle, File, Ban, Check, ChevronRight, Dot, FileIcon, Pencil, Undo, Undo2, X, Flag, Copy as CopyIcon, Info, CirclePlus, Ellipsis, CircleEllipsis, Folder, ALargeSmall, TypeOutline, Text, Cpu } from 'lucide-react';
+import { AlertTriangle, File, Ban, Check, ChevronRight, Dot, FileIcon, Pencil, Undo, Undo2, X, Flag, Copy as CopyIcon, Info, CirclePlus, Ellipsis, CircleEllipsis, Folder, ALargeSmall, TypeOutline, Text, Cpu, Building2, Code2, HelpCircle, Bug, Workflow } from 'lucide-react';
 import { ChatMessage, CheckpointEntry, StagingSelectionItem, ToolMessage } from '../../../../common/chatThreadServiceTypes.js';
 import { approvalTypeOfBuiltinToolName, BuiltinToolCallParams, BuiltinToolName, ToolName, LintErrorItem, ToolApprovalType, toolApprovalTypes } from '../../../../common/toolsServiceTypes.js';
 import { CopyButton, EditToolAcceptRejectButtonsHTML, IconShell1, JumpToFileButton, JumpToTerminalButton, StatusIndicator, StatusIndicatorForApplyButton, useApplyStreamState, useEditToolStreamState } from '../markdown/ApplyBlockHoverButtons.js';
@@ -245,23 +245,38 @@ const ReasoningOptionSlider = ({ featureName }: { featureName: FeatureName }) =>
 
 
 
-const nameOfChatMode = {
+const nameOfChatMode: Record<ChatMode, string> = {
 	'normal': 'Чат',
 	'gather': 'Сбор',
 	'agent': 'Агент',
+	'architect': 'Архитектор',
+	'code': 'Код',
+	'ask': 'Вопрос',
+	'debug': 'Отладка',
+	'orchestrator': 'Оркестратор',
 }
 
-const detailOfChatMode = {
+const detailOfChatMode: Record<ChatMode, string> = {
 	'normal': 'Обычный чат',
 	'gather': 'Читает файлы, но не редактирует',
 	'agent': 'Редактирует файлы и использует инструменты',
+	'architect': 'Планирование и проектирование',
+	'code': 'Написание и рефакторинг кода',
+	'ask': 'Ответы на вопросы без изменений',
+	'debug': 'Систематическая отладка',
+	'orchestrator': 'Координация сложных задач',
 }
 
 // Иконки для режимов
-const iconOfChatMode = {
+const iconOfChatMode: Record<ChatMode, React.ReactNode> = {
 	'normal': <Text size={12} className="text-[#ff6600]" />,
 	'gather': <FileIcon size={12} className="text-[#ff6600]" />,
 	'agent': <Cpu size={12} className="text-[#ff6600]" />,
+	'architect': <Building2 size={12} className="text-[#ff6600]" />,
+	'code': <Code2 size={12} className="text-[#ff6600]" />,
+	'ask': <HelpCircle size={12} className="text-[#ff6600]" />,
+	'debug': <Bug size={12} className="text-[#ff6600]" />,
+	'orchestrator': <Workflow size={12} className="text-[#ff6600]" />,
 }
 
 const ChatModeDropdown = ({ className }: { className: string }) => {
@@ -270,7 +285,7 @@ const ChatModeDropdown = ({ className }: { className: string }) => {
 	const settingsState = useSettingsState()
 
 	const [isOpen, setIsOpen] = useState(false)
-	const options: ChatMode[] = useMemo(() => ['agent', 'normal', 'gather'], []) // Агент первый
+	const options: ChatMode[] = useMemo(() => ['agent', 'architect', 'code', 'debug', 'ask', 'orchestrator', 'normal', 'gather'], []) // Агент первый
 
 	const onChangeOption = useCallback((newVal: ChatMode) => {
 		voidSettingsService.setGlobalSetting('chatMode', newVal)

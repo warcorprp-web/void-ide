@@ -10,7 +10,7 @@ import { StagingSelectionItem } from '../chatThreadServiceTypes.js';
 import { os } from '../helpers/systemInfo.js';
 import { RawToolParamsObj } from '../sendLLMMessageTypes.js';
 import { approvalTypeOfBuiltinToolName, BuiltinToolCallParams, BuiltinToolName, BuiltinToolResultType, ToolName } from '../toolsServiceTypes.js';
-import { ChatMode } from '../voidSettingsTypes.js';
+import { ChatMode, chatModeConfigs } from '../voidSettingsTypes.js';
 
 // Triple backtick wrapper used throughout the prompts for code blocks
 export const tripleTick = ['```', '```']
@@ -426,13 +426,16 @@ const systemToolsXMLPrompt = (chatMode: ChatMode, mcpTools: InternalToolInfo[] |
 
 
 export const chat_systemMessage = ({ workspaceFolders, openedURIs, activeURI, persistentTerminalIDs, directoryStr, chatMode: mode, mcpTools, includeXMLToolDefinitions }: { workspaceFolders: string[], directoryStr: string, openedURIs: string[], activeURI: string | undefined, persistentTerminalIDs: string[], chatMode: ChatMode, mcpTools: InternalToolInfo[] | undefined, includeXMLToolDefinitions: boolean }) => {
+	
+	// Get mode configuration
+	const modeConfig = chatModeConfigs[mode]
+	
 	const header = (`ВАЖНО: Всегда отвечай на русском языке. Все твои ответы, объяснения и комментарии должны быть на русском.
 
-You are an expert coding ${mode === 'agent' ? 'agent' : 'assistant'} whose job is \
-${mode === 'agent' ? `to help the user develop, run, and make changes to their codebase.`
-			: mode === 'gather' ? `to search, understand, and reference files in the user's codebase.`
-				: mode === 'normal' ? `to assist the user with their coding tasks.`
-					: ''}
+${modeConfig.roleDefinition}
+
+${modeConfig.customInstructions ? `\n${modeConfig.customInstructions}\n` : ''}
+
 You will be given instructions to follow from the user, and you may also be given a list of files that the user has specifically selected for context, \`SELECTIONS\`.
 Please assist the user with their query.`)
 

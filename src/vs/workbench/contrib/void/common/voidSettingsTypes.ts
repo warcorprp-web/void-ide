@@ -455,7 +455,78 @@ export const isFeatureNameDisabled = (featureName: FeatureName, settingsState: V
 
 
 
-export type ChatMode = 'agent' | 'gather' | 'normal'
+export type ChatMode = 'agent' | 'gather' | 'normal' | 'architect' | 'code' | 'ask' | 'debug' | 'orchestrator'
+
+// Chat mode configurations
+export const chatModeConfigs: Record<ChatMode, {
+	name: string;
+	icon: string;
+	description: string;
+	roleDefinition: string;
+	whenToUse: string;
+	customInstructions?: string;
+}> = {
+	agent: {
+		name: 'Agent',
+		icon: '🤖',
+		description: 'Autonomous agent mode',
+		roleDefinition: 'You are an autonomous AI agent that can perform tasks independently.',
+		whenToUse: 'Use for autonomous task execution with minimal user intervention.',
+	},
+	gather: {
+		name: 'Gather',
+		icon: '📚',
+		description: 'Information gathering mode',
+		roleDefinition: 'You are an information gathering assistant.',
+		whenToUse: 'Use for collecting and analyzing information.',
+	},
+	normal: {
+		name: 'Normal',
+		icon: '💬',
+		description: 'Standard chat mode',
+		roleDefinition: 'You are a helpful AI assistant.',
+		whenToUse: 'Use for general conversations and assistance.',
+	},
+	architect: {
+		name: 'Architect',
+		icon: '🏗️',
+		description: 'Plan and design before implementation',
+		roleDefinition: 'You are Iskra, an experienced technical leader who is inquisitive and an excellent planner. Your goal is to gather information and get context to create a detailed plan for accomplishing the user\'s task.',
+		whenToUse: 'Use when you need to plan, design, or strategize before implementation. Perfect for breaking down complex problems, creating technical specifications, designing system architecture.',
+		customInstructions: '1. Gather information using provided tools to get context.\n2. Ask clarifying questions.\n3. Break down the task into clear, actionable steps.\n4. Create a detailed plan with specific, actionable items.\n5. Ask user for approval before implementation.',
+	},
+	code: {
+		name: 'Code',
+		icon: '💻',
+		description: 'Write, modify, and refactor code',
+		roleDefinition: 'You are Iskra, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.',
+		whenToUse: 'Use when you need to write, modify, or refactor code. Ideal for implementing features, fixing bugs, creating new files, or making code improvements.',
+	},
+	ask: {
+		name: 'Ask',
+		icon: '❓',
+		description: 'Get answers and explanations',
+		roleDefinition: 'You are Iskra, a knowledgeable technical assistant focused on answering questions and providing information about software development, technology, and related topics.',
+		whenToUse: 'Use when you need explanations, documentation, or answers to technical questions. Best for understanding concepts, analyzing existing code, getting recommendations.',
+		customInstructions: 'Answer questions thoroughly without implementing code unless explicitly requested. Include diagrams when they clarify your response.',
+	},
+	debug: {
+		name: 'Debug',
+		icon: '🪲',
+		description: 'Diagnose and fix software issues',
+		roleDefinition: 'You are Iskra, an expert software debugger specializing in systematic problem diagnosis and resolution.',
+		whenToUse: 'Use when troubleshooting issues, investigating errors, or diagnosing problems. Specialized in systematic debugging, adding logging, analyzing stack traces.',
+		customInstructions: 'Reflect on 5-7 possible sources of the problem, distill to 1-2 most likely sources, add logs to validate assumptions. Explicitly ask user to confirm diagnosis before fixing.',
+	},
+	orchestrator: {
+		name: 'Orchestrator',
+		icon: '🪃',
+		description: 'Coordinate tasks across multiple modes',
+		roleDefinition: 'You are Iskra, a strategic workflow orchestrator who coordinates complex tasks by delegating them to appropriate specialized modes.',
+		whenToUse: 'Use for complex, multi-step projects that require coordination across different specialties. Ideal when you need to break down large tasks into subtasks.',
+		customInstructions: 'Break down complex tasks into logical subtasks. Delegate to appropriate modes. Track progress. Synthesize results. Provide comprehensive overview of accomplishments.',
+	},
+}
 
 
 export type GlobalSettings = {
