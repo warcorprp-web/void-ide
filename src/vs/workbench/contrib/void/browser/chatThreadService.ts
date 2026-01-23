@@ -755,6 +755,65 @@ class ChatThreadService extends Disposable implements IChatThreadService {
 	};
 
 
+	private async _enhanceUserPrompt(userMessage: string, chatMode: ChatMode): Promise<string> {
+		// If enhancement is disabled, return original
+		if (!this._settingsService.state.globalSettings.enhancePrompts) {
+			return userMessage;
+		}
+
+		// Don't enhance if message is already detailed (>100 chars)
+		if (userMessage.length > 100) {
+			return userMessage;
+		}
+
+		// Don't enhance for normal/gather modes
+		if (chatMode === 'normal' || chatMode === 'gather') {
+			return userMessage;
+		}
+
+		try {
+			// Use a simple LLM call to enhance the prompt
+			const enhancementPrompt = `You are a prompt enhancement assistant. Your job is to take a brief user request and expand it into a clear, detailed instruction that includes:
+- Specific context about what needs to be done
+- Clear scope and boundaries
+- Expected outcome
+- Any relevant technical details
+
+Original request: "${userMessage}"
+
+Enhanced request (respond with ONLY the enhanced version, no explanations):`;
+
+			let enhanced = '';
+			const cancelToken = this._llmMessageService.sendLLMMessage({
+				messagesType: 'chatMessages',
+				chatMode: 'normal',
+				messages: [{ role: 'user', content: enhancementPrompt }],
+				modelSelection: null,
+				modelSelectionOptions: undefined,
+				overridesOfModel: this._settingsService.state.overridesOfModel,
+				logging: { loggingName: 'Prompt Enhancement', loggingExtras: {} },
+				separateSystemMessage: 'You are a helpful assistant that enhances user prompts.',
+				onText: ({ fullText }) => {
+					enhanced = fullText;
+				},
+				onFinalMessage: () => {},
+				onError: () => {},
+			});
+
+			// Wait a bit for the response
+			await new Promise(resolve => setTimeout(resolve, 3000));
+			
+			// If we got an enhancement and it's reasonable, use it
+			if (enhanced && enhanced.length > userMessage.length && enhanced.length < 500) {
+				return enhanced.trim();
+			}
+		} catch (error) {
+			// If enhancement fails, just use original
+			console.warn('Prompt enhancement failed:', error);
+		}
+
+		return userMessage;
+	}
 
 
 	private async _runChatAgent({
@@ -1273,9 +1332,12 @@ We only need to do it for files that were edited since `from`, ie files between 
 			this._addUserCheckpoint({ threadId })
 		}
 
+		// Enhance the user prompt if enabled
+		const chatMode = this._settingsService.state.globalSettings.chatMode;
+		const enhancedMessage = await this._enhanceUserPrompt(userMessage, chatMode);
 
 		// add user's message to chat history
-		const instructions = userMessage
+		const instructions = enhancedMessage
 		const currSelns: StagingSelectionItem[] = _chatSelections ?? thread.state.stagingSelections
 
 		const userMessageContent = await chat_userMessageContent(instructions, currSelns, { directoryStrService: this._directoryStringService, fileService: this._fileService }) // user message + names of files (NOT content)
