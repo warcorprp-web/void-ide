@@ -407,6 +407,54 @@ const ChatModeDropdown = ({ className }: { className: string }) => {
 	)
 }
 
+// Subtasks display component
+const SubtasksList = ({ className }: { className?: string }) => {
+	const accessor = useAccessor()
+	const chatThreadsService = accessor.get('IChatThreadService')
+	const threadsState = useChatThreadsState()
+	
+	const currentThread = threadsState.allThreads[threadsState.currentThreadId]
+	const subtaskIds = currentThread?.subtaskIds || []
+	
+	if (subtaskIds.length === 0) return null
+	
+	return (
+		<div className={`${className} space-y-2 mb-4`}>
+			<div className="text-xs font-medium text-void-fg-2 flex items-center gap-2">
+				<Workflow size={14} />
+				<span>Активные подзадачи ({subtaskIds.length})</span>
+			</div>
+			<div className="space-y-1">
+				{subtaskIds.map(subtaskId => {
+					const subtask = threadsState.allThreads[subtaskId]
+					if (!subtask) return null
+					
+					const streamState = chatThreadsService.streamState[subtaskId]
+					const isRunning = streamState?.isRunning
+					
+					return (
+						<button
+							key={subtaskId}
+							onClick={() => chatThreadsService.switchToThread(subtaskId)}
+							className="w-full flex items-center gap-2 px-3 py-2 bg-void-bg-2 hover:bg-void-bg-3 rounded-lg border border-void-border-2 transition-colors"
+						>
+							{iconOfChatMode[subtask.subtaskMode || 'code']}
+							<div className="flex-1 text-left">
+								<div className="text-xs font-medium text-void-fg-1 truncate">
+									{subtask.title || `Subtask ${subtaskId.slice(0, 8)}`}
+								</div>
+								<div className="text-xs text-void-fg-3">
+									{isRunning ? '🔄 Выполняется...' : '✓ Завершено'}
+								</div>
+							</div>
+						</button>
+					)
+				})}
+			</div>
+		</div>
+	)
+}
+
 
 
 
@@ -506,13 +554,16 @@ export const VoidChatArea: React.FC<VoidChatAreaProps> = ({
 			{/* Bottom row */}
 			<div className='flex flex-row justify-between items-end gap-1'>
 				{showModelDropdown && (
-					<div className='flex flex-col gap-y-1'>
+					<div className='flex flex-col gap-y-1 w-full'>
 						<ReasoningOptionSlider featureName={featureName} />
 
 						<div className='flex items-center flex-wrap gap-x-2 gap-y-1 text-nowrap '>
 							{featureName === 'Chat' && <ChatModeDropdown className='' />}
 							<ModelDropdown featureName={featureName} className='' />
 						</div>
+						
+						{/* Show subtasks list if any exist */}
+						{featureName === 'Chat' && <SubtasksList className='' />}
 					</div>
 				)}
 

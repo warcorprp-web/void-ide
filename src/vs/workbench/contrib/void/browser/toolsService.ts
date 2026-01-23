@@ -19,6 +19,8 @@ import { RawToolParamsObj } from '../common/sendLLMMessageTypes.js'
 import { MAX_CHILDREN_URIs_PAGE, MAX_FILE_CHARS_PAGE, MAX_TERMINAL_BG_COMMAND_TIME, MAX_TERMINAL_INACTIVE_TIME } from '../common/prompt/prompts.js'
 import { IVoidSettingsService } from '../common/voidSettingsService.js'
 import { generateUuid } from '../../../../base/common/uuid.js'
+import { IChatThreadService } from './chatThreadService.js'
+import { ChatMode } from '../common/voidSettingsTypes.js'
 
 
 // tool use for AI
@@ -153,6 +155,7 @@ export class ToolsService implements IToolsService {
 		@IDirectoryStrService private readonly directoryStrService: IDirectoryStrService,
 		@IMarkerService private readonly markerService: IMarkerService,
 		@IVoidSettingsService private readonly voidSettingsService: IVoidSettingsService,
+		@IChatThreadService private readonly chatThreadService: IChatThreadService,
 	) {
 		const queryBuilder = instantiationService.createInstance(QueryBuilder);
 
@@ -288,6 +291,19 @@ export class ToolsService implements IToolsService {
 				const { persistent_terminal_id: terminalIdUnknown } = params;
 				const persistentTerminalId = validateProposedTerminalId(terminalIdUnknown);
 				return { persistentTerminalId };
+			},
+			new_task: (params: RawToolParamsObj) => {
+				const { mode: modeUnknown, message: messageUnknown } = params;
+				const mode = validateStr('mode', modeUnknown) as ChatMode;
+				const message = validateStr('message', messageUnknown);
+				
+				// Validate mode is one of the allowed modes
+				const allowedModes: ChatMode[] = ['architect', 'code', 'debug', 'ask'];
+				if (!allowedModes.includes(mode)) {
+					throw new Error(`Invalid mode "${mode}". Allowed modes: ${allowedModes.join(', ')}`);
+				}
+				
+				return { mode, message };
 			},
 
 		}
@@ -462,10 +478,13 @@ export class ToolsService implements IToolsService {
 				return { result: {} }
 			},
 			new_task: async ({ mode, message }) => {
-				// Create a new chat thread with the specified mode
-				const taskId = `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-				// TODO: Implement actual subtask creation via chatThreadService
-				// For now, just return a task ID
+				// Get current thread ID to pass as parent
+				const currentThread = this.chatThreadService.getCurrentThread();
+				const parentThreadId = currentThread.id;
+				
+				// Create the subtask thread
+				const taskId = this.chatThreadService.createSubtask(mode, message, parentThreadId);
+				
 				return { result: { taskId } }
 			},
 		}

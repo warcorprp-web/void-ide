@@ -118,6 +118,11 @@ export type ThreadType = {
 
 	messages: ChatMessage[];
 	filesWithUserChanges: Set<string>;
+	
+	// Subtask tracking for orchestrator mode
+	parentThreadId?: string; // ID of parent thread if this is a subtask
+	subtaskIds?: string[]; // IDs of child subtasks if this is an orchestrator
+	subtaskMode?: ChatMode; // Mode this subtask is running in
 
 	// this doesn't need to go in a state object, but feels right
 	state: {
@@ -238,6 +243,7 @@ export interface IChatThreadService {
 
 	getCurrentThread(): ThreadType;
 	openNewThread(): void;
+	createSubtask(mode: ChatMode, message: string, parentThreadId: string): string;
 	switchToThread(threadId: string): void;
 
 	// thread selector
@@ -1667,6 +1673,61 @@ We only need to do it for files that were edited since `from`, ie files between 
 		}
 		this._storeAllThreads(newThreads)
 		this._setState({ allThreads: newThreads, currentThreadId: newThread.id })
+	}
+
+	createSubtask(mode: ChatMode, message: string, parentThreadId: string): string {
+		// Create a new thread for the subtask
+		const newThread = newThreadObject()
+		const taskId = newThread.id
+
+		// Set the mode for this thread by temporarily changing global setting
+		const originalMode = this._settingsService.state.globalSettings.chatMode
+		this._settingsService.setGlobalSetting('chatMode', mode)
+
+		// Add the initial message to the thread
+		const { allThreads: currentThreads } = this.state
+		const updatedThread: ThreadType = {
+			...newThread,
+			messages: [{
+				type: 'user',
+				text: message,
+				selections: [],
+				ts: Date.now(),
+			}],
+			title: `Subtask: ${mode}`,
+			parentThreadId,
+			subtaskMode: mode,
+		}
+
+		// Update parent thread to track this subtask
+		const parentThread = currentThreads[parentThreadId];
+		if (parentThread) {
+			const updatedParent: ThreadType = {
+				...parentThread,
+				subtaskIds: [...(parentThread.subtaskIds || []), taskId],
+			};
+			currentThreads[parentThreadId] = updatedParent;
+		}
+
+		// Store the new thread
+		const newThreads: ChatThreads = {
+			...currentThreads,
+			[taskId]: updatedThread
+		}
+		this._storeAllThreads(newThreads)
+		this._setState({ allThreads: newThreads })
+
+		// Start the agent for this thread
+		this._runChatAgent({
+			threadId: taskId,
+			modelSelection: null,
+			modelSelectionOptions: undefined,
+		})
+
+		// Restore original mode
+		this._settingsService.setGlobalSetting('chatMode', originalMode)
+
+		return taskId
 	}
 
 
