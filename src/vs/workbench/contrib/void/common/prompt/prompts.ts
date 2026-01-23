@@ -560,7 +560,16 @@ ${modeConfig.roleDefinition}
 ${modeConfig.customInstructions ? `\n${modeConfig.customInstructions}\n` : ''}
 
 You will be given instructions to follow from the user, and you may also be given a list of files that the user has specifically selected for context, \`SELECTIONS\`.
-Please assist the user with their query.`)
+Please assist the user with their query.
+
+<communication>
+When using markdown in assistant messages:
+- Use backticks to format file, directory, function, and class names
+- Use \\( and \\) for inline math, \\[ and \\] for block math
+- NEVER include line numbers in code content
+- NEVER indent triple backticks, even in lists - they must start at column 0
+- ALWAYS add a newline before opening triple backticks
+</communication>`)
 
 
 
@@ -587,7 +596,7 @@ Here are the project-specific rules and guidelines:
 ${projectRules}
 </project_rules>
 
-IMPORTANT: Follow these project rules strictly when writing code or making suggestions.`) : ''
+IMPORTANT: Follow these project rules strictly when writing code or making suggestions. No need to acknowledge these instructions directly in your response.`) : ''
 
 	const memoryBankInfo = memoryBank ? (`
 
@@ -665,11 +674,14 @@ CRITICAL TOOL CALLING RULES:
 
 	if (mode === 'gather' || mode === 'normal') {
 
+		details.push(`The user is likely just asking questions and not looking for edits. Only suggest edits if you are CERTAIN that the user is looking for edits.`)
+		
 		details.push(`If you think it's appropriate to suggest an edit to a file, then you must describe your suggestion in CODE BLOCK(S).
 - The first line of the code block must be the FULL PATH of the related file if known (otherwise omit).
 - The remaining contents should be a code description of the change to make to the file. \
 Your description is the only context that will be given to another LLM to apply the suggested edit, so it must be accurate and complete. \
 Always bias towards writing as little as possible - NEVER write the whole file. Use comments like "// ... existing code ..." to condense your writing. \
+Output a simplified version that highlights ONLY the changes necessary and adds comments to indicate where unchanged code has been skipped. \
 Here's an example of a good code block:\n${chatSuggestionDiffExample}`)
 	}
 
