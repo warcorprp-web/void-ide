@@ -784,10 +784,20 @@ Original request: "${userMessage}"
 Enhanced request (respond with ONLY the enhanced version, no explanations):`;
 
 			let enhanced = '';
+			let enhancementComplete: (value: string) => void;
+			const enhancementPromise = new Promise<string>((resolve) => {
+				enhancementComplete = resolve;
+			});
+
 			const cancelToken = this._llmMessageService.sendLLMMessage({
 				messagesType: 'chatMessages',
 				chatMode: 'normal',
-				messages: [{ role: 'user', content: enhancementPrompt }],
+				messages: [
+					{
+						role: 'user',
+						content: [{ type: 'text', text: enhancementPrompt }]
+					}
+				],
 				modelSelection: null,
 				modelSelectionOptions: undefined,
 				overridesOfModel: this._settingsService.state.overridesOfModel,
@@ -796,16 +806,24 @@ Enhanced request (respond with ONLY the enhanced version, no explanations):`;
 				onText: ({ fullText }) => {
 					enhanced = fullText;
 				},
-				onFinalMessage: () => {},
-				onError: () => {},
+				onFinalMessage: () => {
+					enhancementComplete(enhanced);
+				},
+				onError: () => {
+					enhancementComplete('');
+				},
 			});
 
-			// Wait a bit for the response
-			await new Promise(resolve => setTimeout(resolve, 3000));
+			// Wait for enhancement with timeout
+			const timeoutPromise = new Promise<string>((resolve) => {
+				setTimeout(() => resolve(''), 5000);
+			});
+
+			const result = await Promise.race([enhancementPromise, timeoutPromise]);
 			
 			// If we got an enhancement and it's reasonable, use it
-			if (enhanced && enhanced.length > userMessage.length && enhanced.length < 500) {
-				return enhanced.trim();
+			if (result && result.length > userMessage.length && result.length < 500) {
+				return result.trim();
 			}
 		} catch (error) {
 			// If enhancement fails, just use original
