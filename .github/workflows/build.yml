@@ -48,6 +48,10 @@ jobs:
       working-directory: void-ide
       run: npm run gulp vscode-win32-x64
     
+    - name: Apply icon to Code.exe
+      working-directory: void-ide
+      run: npm run gulp vscode-win32-x64-code-icon
+    
     - name: Apply icon to exe
       working-directory: void-ide
       run: npm run gulp vscode-win32-x64-inno-updater
