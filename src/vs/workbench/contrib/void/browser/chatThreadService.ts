@@ -1783,7 +1783,6 @@ We only need to do it for files that were edited since `from`, ie files between 
 					isBeingEdited: false,
 				}
 			}],
-			title: `Subtask: ${mode}`,
 			parentThreadId,
 			subtaskMode: mode,
 		}

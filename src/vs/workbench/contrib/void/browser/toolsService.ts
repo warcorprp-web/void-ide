@@ -505,7 +505,7 @@ export class ToolsService implements IToolsService {
 				const parentThreadId = currentThread.id;
 				
 				// Create the subtask thread
-				const taskId = this.chatThreadService.createSubtask(mode, message, parentThreadId);
+				const taskId = this.chatThreadService.createSubtask(mode as ChatMode, message, parentThreadId);
 				
 				return { result: { taskId } }
 			},

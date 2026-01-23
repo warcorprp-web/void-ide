@@ -400,7 +400,7 @@ export const availableTools = (chatMode: ChatMode | null, mcpTools: InternalTool
 				.filter(toolName => {
 					const hasApproval = toolName in approvalTypeOfBuiltinToolName;
 					return (!hasApproval || // read tools
-						toolName === 'write_to_file' || // for creating plans
+						toolName === 'rewrite_file' || // for creating plans
 						toolName === 'run_command' || // for analysis
 						toolName === 'update_todo_list') && // for TODO management
 						toolName !== 'new_task'; // no delegation
@@ -423,7 +423,7 @@ export const availableTools = (chatMode: ChatMode | null, mcpTools: InternalTool
 				.filter(toolName => {
 					const hasApproval = toolName in approvalTypeOfBuiltinToolName;
 					return !hasApproval || // read tools
-						toolName === 'write_to_file' || // for tracking
+						toolName === 'rewrite_file' || // for tracking
 						toolName === 'new_task'; // delegation tool
 				});
 			effectiveMCPTools = mcpTools;
