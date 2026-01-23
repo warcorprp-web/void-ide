@@ -392,7 +392,7 @@ export const availableTools = (chatMode: ChatMode | null, mcpTools: InternalTool
 				.filter(toolName => 
 					(!(toolName in approvalTypeOfBuiltinToolName) || // read tools
 					toolName === 'write_to_file' || // for creating plans
-					toolName === 'execute_command') && // for analysis
+					toolName === 'run_command') && // for analysis
 					toolName !== 'new_task' // no delegation
 				);
 			effectiveMCPTools = mcpTools;
