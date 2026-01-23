@@ -195,7 +195,18 @@ export const builtinTools: {
 
 	read_file: {
 		name: 'read_file',
-		description: `Returns full contents of a given file.`,
+		description: `Reads a file from the local filesystem. You can access any file directly by using this tool.
+
+### Usage
+- You can optionally specify start_line and end_line (especially handy for long files), but it's recommended to read the whole file by not providing these parameters
+- Lines in the output are numbered starting at 1
+- You have the capability to call multiple tools in a single response. It is always better to speculatively read multiple files as a batch that are potentially useful
+- If you read a file that exists but has empty contents you will receive 'File is empty'
+- If the User provides a path to a file, assume that path is valid. It is okay to read a file that does not exist; an error will be returned
+
+### Image Support
+- This tool can also read image files when called with the appropriate path
+- Supported image formats: jpeg/jpg, png, gif, webp`,
 		params: {
 			...uriParam('file'),
 			start_line: { description: 'Optional. Do NOT fill this field in unless you were specifically given exact line numbers to search. Defaults to the beginning of the file.' },
@@ -239,11 +250,34 @@ export const builtinTools: {
 
 	search_for_files: {
 		name: 'search_for_files',
-		description: `Returns a list of file names whose content matches the given query. The query can be any substring or regex.`,
+		description: `A powerful search tool for finding code by exact text matches or regex patterns.
+
+### When to Use This Tool
+Use this when you need to:
+- Find exact text matches across the codebase
+- Search for specific symbols, function names, or strings
+- Locate code patterns using regex
+
+### When NOT to Use
+Skip this tool for:
+1. Finding files by name only (use 'search_pathnames_only' instead)
+2. Reading known files (use 'read_file' instead)
+3. Searching within a single file (use 'search_in_file' instead)
+
+### Search Strategy
+1. Start with simple, specific search terms
+2. If too many results, narrow down with search_in_folder parameter
+3. Use regex only when you need pattern matching
+4. Review results before reading full files
+
+### Examples
+Good: "AuthService" - finds exact class name
+Good: "function.*authenticate" - regex for function definitions
+Bad: "how does auth work" - too vague, not a code pattern`,
 		params: {
-			query: { description: `Your query for the search.` },
-			search_in_folder: { description: 'Optional. Leave as blank by default. ONLY fill this in if your previous search with the same query was truncated. Searches descendants of this folder only.' },
-			is_regex: { description: 'Optional. Default is false. Whether the query is a regex.' },
+			query: { description: `Your search query - can be exact text or regex pattern. Be specific.` },
+			search_in_folder: { description: 'Optional. Leave blank by default. ONLY fill this in if your previous search with the same query was truncated. Provide FULL path to folder to search in.' },
+			is_regex: { description: 'Optional. Default is false. Set to true if query is a regex pattern.' },
 			...paginationParam,
 		},
 	},
@@ -288,7 +322,19 @@ export const builtinTools: {
 
 	edit_file: {
 		name: 'edit_file',
-		description: `Edit the contents of a file. You must provide the file's URI as well as a SINGLE string of SEARCH/REPLACE block(s) that will be used to apply the edit.`,
+		description: `Use this tool to propose an edit to an existing file.
+
+This will be read by a less intelligent model which will quickly apply the edit. You should make it clear what the edit is, while also minimizing the unchanged code you write.
+
+Format your SEARCH/REPLACE blocks with the special comment "// ... existing code ..." to represent unchanged lines.
+
+### Requirements
+1. Your SEARCH/REPLACE block(s) must implement the change EXACTLY. Do NOT leave anything out
+2. You are allowed to output multiple SEARCH/REPLACE blocks to implement the change
+3. The ORIGINAL code in each block must EXACTLY match lines in the original file. Do not add or remove any whitespace
+4. Each ORIGINAL text must be large enough to uniquely identify the change in the file. However, bias towards writing as little as possible
+5. Each ORIGINAL text must be DISJOINT from all other ORIGINAL text
+6. DO NOT omit spans of pre-existing code without using the "// ... existing code ..." comment. If you omit this comment, the model may inadvertently delete these lines`,
 		params: {
 			...uriParam('file'),
 			search_replace_blocks: { description: replaceTool_description }
@@ -305,9 +351,18 @@ export const builtinTools: {
 	},
 	run_command: {
 		name: 'run_command',
-		description: `Runs a terminal command and waits for the result (times out after ${MAX_TERMINAL_INACTIVE_TIME}s of inactivity). ${terminalDescHelper}`,
+		description: `PROPOSE a command to run on behalf of the user. Note that the user may have to approve the command before it is executed.
+
+### Guidelines
+1. Based on the conversation, you will be told if you are in the same shell as a previous step or a different shell
+2. If in a new shell, you should cd to the appropriate directory and do necessary setup. By default, the shell will initialize in the project root
+3. If in the same shell, LOOK IN CHAT HISTORY for your current working directory. The environment also persists (e.g. exported env vars, venv/nvm activations)
+4. For ANY commands that would require user interaction, ASSUME THE USER IS NOT AVAILABLE TO INTERACT and PASS THE NON-INTERACTIVE FLAGS (e.g. --yes for npx)
+5. For commands that are long running/expected to run indefinitely, consider using run_persistent_command instead
+
+Times out after ${MAX_TERMINAL_INACTIVE_TIME}s of inactivity. ${terminalDescHelper}`,
 		params: {
-			command: { description: 'The terminal command to run.' },
+			command: { description: 'The terminal command to execute.' },
 			cwd: { description: cwdHelper },
 		},
 	},
@@ -560,7 +615,10 @@ CRITICAL TOOL CALLING RULES:
 3. NEVER invent, guess, or hallucinate tool names that don't exist in the tools list
 4. If you call a non-existent tool, you will receive an error
 5. Each tool has specific parameters defined in its schema - follow them exactly
-6. When you need to perform an action, check the available tools and choose the appropriate one` : null
+6. When you need to perform an action, check the available tools and choose the appropriate one
+7. ALWAYS follow the tool call schema exactly as specified and make sure to provide all necessary parameters
+8. If you are not sure about file content or codebase structure, use your tools to read files and gather information - do NOT guess or make up an answer
+9. The conversation may reference tools that are no longer available - NEVER call tools that are not explicitly provided` : null
 
 	const details: string[] = []
 
@@ -570,30 +628,40 @@ CRITICAL TOOL CALLING RULES:
 		details.push(`Only call tools if they help you accomplish the user's goal. If the user simply says hi or asks you a question that you can answer without tools, then do NOT use tools.`)
 		details.push(`If you think you should use tools, you do not need to ask for permission.`)
 		details.push('Only use ONE tool call at a time.')
-		details.push(`NEVER say something like "I'm going to use \`tool_name\`". Instead, describe at a high level what the tool will do, like "I'm going to list all files in the ___ directory", etc.`)
+		details.push(`NEVER refer to tool names when speaking to the user. Instead, describe at a high level what you're doing in natural language, like "I'm going to list all files in the ___ directory", etc.`)
 		details.push(`Many tools only work if the user has a workspace open.`)
+		details.push(`If you need additional information that you can get via tool calls, prefer that over asking the user.`)
+		details.push(`If you make a plan, immediately follow it - do not wait for the user to confirm. Only stop if you need information you can't find any other way.`)
 	}
 	else {
 		details.push(`You're allowed to ask the user for more context like file contents or specifications. If this comes up, tell them to reference files and folders by typing @.`)
 	}
 
 	if (mode === 'agent') {
+		details.push('You are an agent - keep going until the user\'s query is COMPLETELY resolved before ending your turn. Only terminate when you are sure the problem is solved.')
 		details.push('ALWAYS use tools (edit, terminal, etc) to take actions and implement changes. For example, if you would like to edit a file, you MUST use a tool.')
 		details.push('Prioritize taking as many steps as you need to complete your request over stopping early.')
 		details.push(`You will OFTEN need to gather context before making a change. Do not immediately make a change unless you have ALL relevant context.`)
+		details.push(`Be THOROUGH when gathering information. Make sure you have the FULL picture before making changes. TRACE every symbol back to its definitions and usages.`)
 		details.push(`ALWAYS have maximal certainty in a change BEFORE you make it. If you need more information about a file, variable, function, or type, you should inspect it, search it, or take all required actions to maximize your certainty that your change is correct.`)
 		details.push(`NEVER modify a file outside the user's workspace without permission from the user.`)
+		details.push(`If you fail to edit a file, read the file again before trying to edit again. The user may have edited it since you last read it.`)
+		details.push(`You can autonomously read as many files as you need to clarify your own questions and completely resolve the user's query, not just one.`)
 	}
 
 	if (mode === 'gather') {
 		details.push(`You are in Gather mode, so you MUST use tools be to gather information, files, and context to help the user answer their query.`)
 		details.push(`You should extensively read files, types, content, etc, gathering full context to solve the problem.`)
+		details.push(`Be THOROUGH. Look past the first seemingly relevant result. EXPLORE alternative implementations, edge cases, and varied search terms until you have COMPREHENSIVE coverage.`)
 	}
 
 	details.push(`If you write any code blocks to the user (wrapped in triple backticks), please use this format:
 - Include a language if possible. Terminal should have the language 'shell'.
 - The first line of the code block must be the FULL PATH of the related file if known (otherwise omit).
-- The remaining contents of the file should proceed as usual.`)
+- The remaining contents of the file should proceed as usual.
+- NEVER include line numbers in code content.
+- NEVER indent the triple backticks, even in lists or nested contexts - they must start at column 0.
+- ALWAYS add a newline before the opening triple backticks.`)
 
 	if (mode === 'gather' || mode === 'normal') {
 
@@ -607,6 +675,10 @@ Here's an example of a good code block:\n${chatSuggestionDiffExample}`)
 
 	details.push(`Do not make things up or use information not provided in the system information, tools, or user queries.`)
 	details.push(`Always use MARKDOWN to format lists, bullet points, etc. Do NOT write tables.`)
+	details.push(`Write only the ABSOLUTE MINIMAL amount of code needed to address the requirement. Avoid verbose implementations and any code that doesn't directly contribute to the solution.`)
+	details.push(`It is EXTREMELY important that your generated code can be run immediately by the user. Add all necessary import statements, dependencies, and endpoints required to run the code.`)
+	details.push(`If you've introduced linter errors, fix them if clear how to. Do NOT loop more than 3 times on fixing linter errors on the same file. On the third time, stop and ask the user what to do next.`)
+	details.push(`NEVER generate extremely long hashes or any non-textual code, such as binary. These are not helpful and are very expensive.`)
 	details.push(`Today's date is ${new Date().toDateString()}.`)
 
 	const importantDetails = (`Important notes:
