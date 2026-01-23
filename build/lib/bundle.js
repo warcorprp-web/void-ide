@@ -55,7 +55,9 @@ function removeDuplicateTSBoilerplate(source, SEEN_BOILERPLATE = []) {
                 newLines.push('');
             }
             else {
-                newLines.push(line);
+                // Replace 'export function __decorate' with 'function __decorate' to make it accessible in bundle
+                const modifiedLine = line.replace(/^export function (__decorate|__param|__esDecorate|__metadata|__awaiter|__generator)/, 'function $1');
+                newLines.push(modifiedLine);
             }
         }
     }
