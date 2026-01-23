@@ -305,6 +305,28 @@ export class ToolsService implements IToolsService {
 				
 				return { mode, message };
 			},
+			update_todo_list: (params: RawToolParamsObj) => {
+				const { todos: todosUnknown } = params;
+				
+				// Validate todos is an array
+				if (!Array.isArray(todosUnknown)) {
+					throw new Error('todos must be an array');
+				}
+				
+				// Validate each todo is a string
+				const todos = todosUnknown.map((todo, i) => {
+					if (typeof todo !== 'string') {
+						throw new Error(`Todo item ${i} must be a string`);
+					}
+					return todo.trim();
+				}).filter(todo => todo.length > 0);
+				
+				if (todos.length === 0) {
+					throw new Error('todos array cannot be empty');
+				}
+				
+				return { todos };
+			},
 
 		}
 
@@ -487,6 +509,17 @@ export class ToolsService implements IToolsService {
 				
 				return { result: { taskId } }
 			},
+			update_todo_list: async ({ todos }) => {
+				// Store TODO list in thread state
+				const currentThread = this.chatThreadService.getCurrentThread();
+				
+				// Update thread with TODO list
+				this.chatThreadService.setCurrentThreadState({
+					todoList: todos,
+				});
+				
+				return { result: { todosCount: todos.length } }
+			},
 		}
 
 
@@ -592,6 +625,10 @@ export class ToolsService implements IToolsService {
 			},
 			new_task: (params, result) => {
 				return `Subtask created successfully with ID: ${result.taskId}\nMode: ${params.mode}\nThe subtask will execute independently. You will be notified when it completes.`;
+			},
+			update_todo_list: (params, result) => {
+				const todoListFormatted = params.todos.map((todo, i) => `${i + 1}. ${todo}`).join('\n');
+				return `TODO list updated successfully with ${result.todosCount} items:\n\n${todoListFormatted}\n\nYou can now proceed with implementation or ask the user for approval.`;
 			},
 		}
 

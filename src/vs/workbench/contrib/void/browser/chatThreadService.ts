@@ -130,6 +130,8 @@ export type ThreadType = {
 
 		stagingSelections: StagingSelectionItem[];
 		focusedMessageIdx: number | undefined; // index of the user message that is being edited (undefined if none)
+		
+		todoList?: string[]; // TODO items for architect mode
 
 		linksOfMessageIdx: { // eg. link = linksOfMessageIdx[4]['RangeFunction']
 			[messageIdx: number]: {

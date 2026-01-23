@@ -62,6 +62,7 @@ export type BuiltinToolCallParams = {
 	'kill_persistent_terminal': { persistentTerminalId: string },
 	// ---
 	'new_task': { mode: string, message: string },
+	'update_todo_list': { todos: string[] },
 }
 
 // RESULT OF TOOL CALL
@@ -85,6 +86,7 @@ export type BuiltinToolResultType = {
 	'kill_persistent_terminal': {},
 	// ---
 	'new_task': { taskId: string },
+	'update_todo_list': { todosCount: number },
 }
 
 

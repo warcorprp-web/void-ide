@@ -345,6 +345,14 @@ export const builtinTools: {
 			mode: { description: `The mode to use for this subtask. Options: 'architect', 'code', 'debug', 'ask'. Choose based on the subtask's goal.` },
 			message: { description: `Comprehensive instructions for the subtask. Must include: all necessary context, clearly defined scope, explicit instruction to use attempt_completion when done, and note that these instructions supersede general mode instructions.` }
 		}
+	},
+
+	update_todo_list: {
+		name: 'update_todo_list',
+		description: `Updates the TODO list for the current task. Use this in Architect mode to create or update a structured plan. Each TODO item should be specific, actionable, and in logical execution order.`,
+		params: {
+			todos: { description: `Array of TODO items. Each item should be a clear, actionable task that can be executed independently. Example: ["Analyze current authentication flow", "Design new JWT token structure", "Implement token refresh mechanism", "Add error handling for expired tokens", "Write unit tests for auth service"]` }
+		}
 	}
 
 
@@ -387,12 +395,13 @@ export const availableTools = (chatMode: ChatMode | null, mcpTools: InternalTool
 			break;
 		
 		case 'architect':
-			// Architect: read + edit markdown only (simulated by allowing all read tools + write_to_file)
+			// Architect: read + edit markdown only + TODO list
 			builtinToolNames = (Object.keys(builtinTools) as BuiltinToolName[])
 				.filter(toolName => 
 					(!(toolName in approvalTypeOfBuiltinToolName) || // read tools
 					toolName === 'write_to_file' || // for creating plans
-					toolName === 'run_command') && // for analysis
+					toolName === 'run_command' || // for analysis
+					toolName === 'update_todo_list') && // for TODO management
 					toolName !== 'new_task' // no delegation
 				);
 			effectiveMCPTools = mcpTools;
